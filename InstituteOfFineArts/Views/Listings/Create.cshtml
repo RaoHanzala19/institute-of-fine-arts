@@ -1,0 +1,67 @@
+@model ListingCreateVm
+@{
+    ViewData["Title"] = "Forward a painting";
+    var exhibitions = (List<Exhibition>)ViewBag.Exhibitions;
+    var paintings = (List<Submission>)ViewBag.Paintings;
+}
+<div class="page-head">
+    <div><a asp-action="Index" class="back-link"><i class="bi bi-arrow-left"></i>Listings</a><h1 class="page-title">Forward a painting</h1><p class="page-sub">Only paintings graded <strong>Best</strong> can be sent to an exhibition.</p></div>
+</div>
+
+@if (exhibitions.Count == 0 || paintings.Count == 0)
+{
+    <div class="panel"><div class="panel-body"><partial name="_Empty" model='("bi-building", exhibitions.Count == 0 ? "No open exhibition" : "No Best-graded paintings", exhibitions.Count == 0 ? "Create an upcoming or running exhibition first." : "Grade at least one painting Best to forward it.")' /></div></div>
+}
+else
+{
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <form asp-action="Create" method="post" class="form-section" novalidate>
+                <div asp-validation-summary="ModelOnly" class="alert alert-soft-danger"></div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label asp-for="ExhibitionId" class="form-label"></label>
+                        <select asp-for="ExhibitionId" class="form-select">
+                            <option value="">— choose an exhibition —</option>
+                            @foreach (var e in exhibitions) { <option value="@e.ExhibitionId" selected="@(Model.ExhibitionId == e.ExhibitionId)">@e.ExhibitionName — @e.City (@e.CommissionPercent.ToString("0.#")% commission)</option> }
+                        </select>
+                        <span asp-validation-for="ExhibitionId"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="SubmissionId" class="form-label"></label>
+                        <select asp-for="SubmissionId" class="form-select" id="paintingSelect">
+                            <option value="">— choose a painting —</option>
+                            @foreach (var p in paintings) { <option value="@p.SubmissionId" data-thumb="@(p.ThumbnailPath ?? p.ImageFilePath)" selected="@(Model.SubmissionId == p.SubmissionId)">@p.PaintingTitle — @p.Student.FullName (@p.Competition.Title)</option> }
+                        </select>
+                        <span asp-validation-for="SubmissionId"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="StudentQuotedPrice" class="form-label"></label>
+                        <div class="input-group"><span class="input-group-text">@Ui.Currency</span><input asp-for="StudentQuotedPrice" type="number" step="0.01" min="1" class="form-control" /></div>
+                        <span asp-validation-for="StudentQuotedPrice"></span>
+                    </div>
+                    <div class="col-12"><label asp-for="Notes" class="form-label"></label><textarea asp-for="Notes" class="form-control" rows="3" maxlength="1000"></textarea></div>
+                </div>
+                <button class="btn btn-primary btn-lg mt-4" type="submit">Forward to exhibition</button>
+            </form>
+        </div>
+        <div class="col-lg-5">
+            <div class="frame" id="preview" style="display:none"><img alt="Selected painting" /></div>
+            <div class="panel mt-3"><div class="panel-body small text-muted"><i class="bi bi-info-circle me-1"></i>The student is notified as soon as the painting is forwarded. Sales and payouts are recorded afterwards from the listing's <em>Manage</em> screen.</div></div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            var sel = document.getElementById('paintingSelect'), box = document.getElementById('preview');
+            if (!sel) return;
+            var show = function () {
+                var o = sel.options[sel.selectedIndex], t = o && o.dataset.thumb;
+                if (t) { box.style.display = 'block'; box.querySelector('img').src = t; } else { box.style.display = 'none'; }
+            };
+            sel.addEventListener('change', show); show();
+        })();
+    </script>
+}

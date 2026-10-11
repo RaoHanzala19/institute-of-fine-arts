@@ -1,0 +1,68 @@
+@model StaffDashboardVm
+@{
+    ViewData["Title"] = "Dashboard";
+}
+<div class="page-head">
+    <div><h1 class="page-title">Hello, @Model.Name.Split(' ')[0]</h1><p class="page-sub">Your review queue and the work waiting on you.</p></div>
+    <div class="page-actions">
+        @if (Model.Pending > 0) { <a asp-controller="Submissions" asp-action="Next" class="btn btn-primary"><i class="bi bi-lightning-charge me-1"></i>Review next painting</a> }
+        <a asp-controller="Competitions" asp-action="Create" class="btn btn-soft"><i class="bi bi-plus-lg me-1"></i>New competition</a>
+    </div>
+</div>
+
+<div class="stat-grid">
+    <a asp-controller="Submissions" asp-action="Index" asp-route-grade="@SubmissionGrade.Pending" class="stat"><span class="stat-icon warning"><i class="bi bi-hourglass-split"></i></span><div><div class="stat-value">@Model.Pending</div><div class="stat-label">Waiting for evaluation</div></div></a>
+    <a asp-controller="Competitions" asp-action="Index" asp-route-status="@CompetitionStatus.Ongoing" class="stat"><span class="stat-icon success"><i class="bi bi-trophy"></i></span><div><div class="stat-value">@Model.Ongoing</div><div class="stat-label">Ongoing competitions (of @Model.TotalCompetitions)</div></div></a>
+    <a asp-controller="Submissions" asp-action="Index" class="stat"><span class="stat-icon brand"><i class="bi bi-images"></i></span><div><div class="stat-value">@Model.Submissions</div><div class="stat-label">Total submissions</div></div></a>
+    <a asp-controller="Awards" asp-action="Index" class="stat"><span class="stat-icon gold"><i class="bi bi-award"></i></span><div><div class="stat-value">@Model.AwardsIssued</div><div class="stat-label">Awards issued</div></div></a>
+    <a asp-controller="Exhibitions" asp-action="Index" class="stat"><span class="stat-icon info"><i class="bi bi-building"></i></span><div><div class="stat-value">@Model.Exhibitions</div><div class="stat-label">Exhibitions</div></div></a>
+</div>
+
+@if (Model.PastDeadline.Count > 0 || Model.AwaitingAwards.Count > 0)
+{
+    <div class="row g-3 mb-4">
+        @foreach (var c in Model.PastDeadline)
+        {
+            <div class="col-md-6"><div class="alert alert-soft-warning d-flex justify-content-between align-items-center gap-3 mb-0">
+                <div><strong>@c.Title</strong> passed its deadline on @Ui.Date(c.EndDate). Finish the reviews, then conclude it.</div>
+                <a asp-controller="Competitions" asp-action="Details" asp-route-id="@c.CompetitionId" class="btn btn-sm btn-ink flex-none">Open</a>
+            </div></div>
+        }
+        @foreach (var c in Model.AwaitingAwards)
+        {
+            <div class="col-md-6"><div class="alert alert-soft-info d-flex justify-content-between align-items-center gap-3 mb-0">
+                <div><strong>@c.Title</strong> has award tiers that haven't been issued yet.</div>
+                <a asp-controller="Awards" asp-action="Create" asp-route-competitionId="@c.CompetitionId" class="btn btn-sm btn-ink flex-none">Issue awards</a>
+            </div></div>
+        }
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="panel h-100">
+            <div class="panel-head"><div><h3>Review queue</h3><div class="sub">Oldest submissions first</div></div><a asp-controller="Submissions" asp-action="Index" asp-route-grade="@SubmissionGrade.Pending" class="btn btn-sm btn-soft">View all</a></div>
+            <div class="panel-flush">
+                @if (Model.Queue.Count == 0) { <partial name="_Empty" model='("bi-check2-circle", "Queue is empty", "Every submitted painting has been evaluated. Nice work!")' /> }
+                else
+                {
+                    <div class="table-responsive"><table class="table-x"><tbody>
+                    @foreach (var s in Model.Queue)
+                    {
+                        <tr>
+                            <td style="width:1%"><img class="thumb-sm" src="@(s.ThumbnailPath ?? s.ImageFilePath)" alt="" /></td>
+                            <td><div class="row-title">@s.PaintingTitle</div><div class="row-sub">@s.Student.FullName · @s.Competition.Title</div></td>
+                            <td class="row-sub">@Ui.TimeAgo(s.SubmittedAt)</td>
+                            <td class="actions"><a asp-controller="Submissions" asp-action="Evaluate" asp-route-id="@s.SubmissionId" class="btn btn-sm btn-primary">Evaluate</a></td>
+                        </tr>
+                    }
+                    </tbody></table></div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 d-grid gap-4 align-content-start">
+        <div class="panel"><div class="panel-head"><h3>Grade mix</h3></div><div class="panel-body"><div class="chart-box sm"><canvas data-chart="@Ui.ChartJson("doughnut", Model.GradeMix)"></canvas></div></div></div>
+        <partial name="_Announcements" model="Model.Announcements" />
+    </div>
+</div>

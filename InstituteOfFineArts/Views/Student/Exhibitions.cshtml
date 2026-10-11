@@ -1,0 +1,48 @@
+@model List<ExhibitionListing>
+@{
+    ViewData["Title"] = "Exhibitions & sales";
+    var sold = Model.Where(l => l.SaleStatus == SaleStatus.Sold).ToList();
+}
+<div class="page-head"><div><h1 class="page-title">Exhibitions &amp; sales</h1><p class="page-sub">Where your paintings are shown, what they sold for and when you get paid.</p></div></div>
+@if (Model.Count == 0)
+{
+    <div class="panel"><div class="panel-body"><partial name="_Empty" model='("bi-shop", "No exhibition listings yet", "Paintings graded Best can be forwarded to an exhibition by your instructors.")' /></div></div>
+}
+else
+{
+    <div class="stat-grid">
+        <div class="stat"><span class="stat-icon brand"><i class="bi bi-images"></i></span><div><div class="stat-value">@Model.Count</div><div class="stat-label">Paintings exhibited</div></div></div>
+        <div class="stat"><span class="stat-icon success"><i class="bi bi-bag-check"></i></span><div><div class="stat-value">@sold.Count</div><div class="stat-label">Sold</div></div></div>
+        <div class="stat"><span class="stat-icon indigo"><i class="bi bi-cash-coin"></i></span><div><div class="stat-value sm">@Ui.Money(sold.Sum(l => l.NetPayableToStudent ?? 0))</div><div class="stat-label">Your share after commission</div></div></div>
+        <div class="stat"><span class="stat-icon gold"><i class="bi bi-check2-circle"></i></span><div><div class="stat-value sm">@Ui.Money(sold.Sum(l => l.AmountPaidToStudent ?? 0))</div><div class="stat-label">Paid to you so far</div></div></div>
+    </div>
+    <div class="d-grid gap-4">
+    @foreach (var l in Model)
+    {
+        <div class="panel"><div class="panel-body">
+            <div class="row g-4 align-items-center">
+                <div class="col-md-3 col-lg-2"><img src="@(l.Submission.ThumbnailPath ?? l.Submission.ImageFilePath)" alt="" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px" /></div>
+                <div class="col-md-9 col-lg-10">
+                    <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+                        <div><h4 class="mb-0">@l.Submission.PaintingTitle</h4><div class="row-sub">@l.Exhibition.ExhibitionName · @l.Exhibition.Venue, @l.Exhibition.City · @Ui.Date(l.Exhibition.ExhibitionStartDate) – @Ui.Date(l.Exhibition.ExhibitionEndDate)</div></div>
+                        <div class="d-flex gap-2">@Html.Chip(l.SaleStatus)@if (l.SaleStatus == SaleStatus.Sold) { @Html.Chip(l.PaymentStatus) }</div>
+                    </div>
+                    <div class="row g-3 small">
+                        <div class="col-6 col-lg-3"><div class="text-muted">Your asking price</div><strong>@Ui.Money(l.StudentQuotedPrice)</strong></div>
+                        @if (l.SaleStatus == SaleStatus.Sold)
+                        {
+                            <div class="col-6 col-lg-3"><div class="text-muted">Sold for</div><strong>@Ui.Money(l.FinalSalePrice)</strong> <span class="text-muted">on @Ui.Date(l.DateSold)</span></div>
+                            <div class="col-6 col-lg-3"><div class="text-muted">Institute commission (@l.Exhibition.CommissionPercent.ToString("0.#")%)</div><strong>− @Ui.Money(l.CommissionAmount, true)</strong></div>
+                            <div class="col-6 col-lg-3"><div class="text-muted">Your share</div><strong style="color:var(--success)">@Ui.Money(l.NetPayableToStudent, true)</strong></div>
+                            <div class="col-12">
+                                @if (l.PaymentStatus == PaymentStatus.Paid) { <div class="alert alert-soft-success mb-0 py-2"><i class="bi bi-check-circle me-1"></i>Paid @Ui.Money(l.AmountPaidToStudent, true) on @Ui.Date(l.PaymentDate)@(string.IsNullOrEmpty(l.PaymentRemarks) ? "" : " · " + l.PaymentRemarks)</div> }
+                                else { <div class="alert alert-soft-warning mb-0 py-2"><i class="bi bi-hourglass-split me-1"></i>Payment of @Ui.Money(l.NetPayableToStudent, true) is being processed.</div> }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div></div>
+    }
+    </div>
+}

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <partial name="_Head" />
+    <script>document.documentElement.setAttribute('data-bs-theme', 'light');</script>
+</head>
+<body class="bare">
+    <div class="bare-bar no-print">
+        <a href="javascript:history.back()" class="btn btn-soft btn-sm"><i class="bi bi-arrow-left me-1"></i>Back</a>
+        <button type="button" class="btn btn-primary btn-sm" data-print><i class="bi bi-printer me-1"></i>Print / save as PDF</button>
+    </div>
+    @RenderBody()
+    <partial name="_Scripts" />
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

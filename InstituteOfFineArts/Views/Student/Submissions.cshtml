@@ -1,0 +1,21 @@
+@model List<Submission>
+@{
+    ViewData["Title"] = "My submissions";
+}
+<div class="page-head">
+    <div><h1 class="page-title">My submissions</h1><p class="page-sub">Everything you have entered, with its current grade.</p></div>
+    <div class="page-actions"><a asp-action="Upload" class="btn btn-primary"><i class="bi bi-cloud-arrow-up me-1"></i>Upload a painting</a></div>
+</div>
+@if (Model.Count == 0)
+{
+    <div class="panel"><div class="panel-body"><partial name="_Empty" model='("bi-brush", "You have not entered anything yet", "Pick an open competition and upload your first painting.")' /></div></div>
+}
+else
+{
+    <div class="grid-cards">
+        @foreach (var s in Model)
+        {
+            <partial name="_PaintingCard" model='new PaintingCardVm { S = s, Href = Url.Action("SubmissionDetails", new { id = s.SubmissionId })!, Artist = "", ShowLike = false, ShowGrade = true, FootRight = s.Evaluation == null ? "Awaiting review" : "Evaluated" }' />
+        }
+    </div>
+}

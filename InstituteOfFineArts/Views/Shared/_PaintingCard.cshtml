@@ -1,0 +1,26 @@
+@model PaintingCardVm
+<article class="p-card">
+    <div class="media">
+        <img loading="lazy" src="@(Model.S.ThumbnailPath ?? Model.S.ImageFilePath)" alt="@Model.S.PaintingTitle" />
+        @if (Model.ShowGrade)
+        {
+            <div class="tl">@Html.Chip(Model.S.Grade)</div>
+        }
+        @if (Model.ShowLike)
+        {
+            <div class="tr">
+                <button type="button" class="like-btn js-like @(Model.Liked ? "liked" : "")" data-id="@Model.S.SubmissionId" @(Model.Anonymous ? "data-anon=1" : "") aria-label="Like this painting">
+                    <i class="bi @(Model.Liked ? "bi-heart-fill" : "bi-heart")"></i><span class="count">@Model.Likes</span>
+                </button>
+            </div>
+        }
+    </div>
+    <div class="body">
+        <h3 class="title"><a href="@Model.Href" class="stretched-link">@Model.S.PaintingTitle</a></h3>
+        <div class="meta">@(string.IsNullOrEmpty(Model.Artist) ? "" : "by " + Model.Artist)</div>
+        <div class="foot">
+            <span class="text-truncate">@(Model.FootLeft ?? Model.S.Competition?.Title)</span>
+            <span>@(Model.FootRight ?? Ui.Date(Model.S.SubmittedAt, "MMM yyyy"))</span>
+        </div>
+    </div>
+</article>

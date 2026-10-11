@@ -1,0 +1,39 @@
+@model PagedList<AuditLog>
+@{
+    ViewData["Title"] = "Audit log";
+    var from = (DateTime?)ViewBag.From; var to = (DateTime?)ViewBag.To;
+    var hasFilter = !string.IsNullOrEmpty((string?)ViewBag.Q) || !string.IsNullOrEmpty((string?)ViewBag.Act) || !string.IsNullOrEmpty((string?)ViewBag.Entity) || from.HasValue || to.HasValue;
+}
+<div class="page-head">
+    <div><h1 class="page-title">Audit log</h1><p class="page-sub">A tamper-evident trail of who created, changed or deleted what.</p></div>
+    <div class="page-actions"><a asp-action="Index" asp-route-export="true" asp-route-q="@ViewBag.Q" asp-route-act="@ViewBag.Act" asp-route-entity="@ViewBag.Entity" asp-route-from="@from?.ToString("yyyy-MM-dd")" asp-route-to="@to?.ToString("yyyy-MM-dd")" class="btn btn-soft"><i class="bi bi-download me-1"></i>Export CSV</a></div>
+</div>
+<form method="get" class="filters">
+    <div class="search"><i class="bi bi-search"></i><input type="search" name="q" value="@ViewBag.Q" class="form-control" placeholder="Search user, details or entity id…" data-debounce /></div>
+    <select name="act" class="form-select" data-autosubmit asp-items="ViewBag.Actions"><option value="">All actions</option></select>
+    <select name="entity" class="form-select" data-autosubmit asp-items="ViewBag.Entities"><option value="">All entities</option></select>
+    <input type="date" name="from" value="@from?.ToString("yyyy-MM-dd")" class="form-control" data-autosubmit-input onchange="this.form.submit()" title="From" />
+    <input type="date" name="to" value="@to?.ToString("yyyy-MM-dd")" class="form-control" onchange="this.form.submit()" title="To" />
+    @if (hasFilter) { <a asp-action="Index" class="btn btn-ghost btn-sm">Clear</a> }
+</form>
+<div class="panel panel-flush">
+    @if (Model.Count == 0) { <partial name="_Empty" model='("bi-journal-text", "No entries", "Nothing matches these filters.")' /> }
+    else
+    {
+        <div class="table-responsive"><table class="table-x">
+            <thead><tr><th>When</th><th>User</th><th>Action</th><th>Entity</th><th>Details</th></tr></thead>
+            <tbody>
+            @foreach (var a in Model)
+            {
+                <tr>
+                    <td class="row-sub" style="white-space:nowrap">@Ui.DateTimeText(a.Timestamp)</td>
+                    <td>@a.UserName<div class="row-sub">@a.IpAddress</div></td>
+                    <td><span class="chip @(a.Action is "Deleted" or "Deactivated" ? "chip-danger" : a.Action is "Created" or "Activated" ? "chip-success" : a.Action is "Login" ? "chip-neutral" : "chip-info")">@a.Action</span></td>
+                    <td><strong>@a.EntityName</strong>@if (a.EntityId != null) { <span class="row-sub mono"> #@a.EntityId</span> }</td>
+                    <td class="row-sub" style="max-width:520px;overflow-wrap:anywhere">@a.Details</td>
+                </tr>
+            }
+            </tbody></table></div>
+    }
+</div>
+<partial name="_Pager" model="(IPaged)Model" />

@@ -1,0 +1,50 @@
+@model PagedList<ExhibitionListing>
+@{
+    ViewData["Title"] = "Listings & sales";
+    var sale = (SaleStatus?)ViewBag.Sale;
+    var payment = (PaymentStatus?)ViewBag.Payment;
+    var hasFilter = !string.IsNullOrEmpty((string?)ViewBag.Q) || sale.HasValue || payment.HasValue || ViewBag.ExhibitionId != null;
+}
+<div class="page-head">
+    <div><h1 class="page-title">Listings &amp; sales</h1><p class="page-sub">Paintings forwarded to exhibitions, their sale status and payouts to students.</p></div>
+    <div class="page-actions">
+        <a asp-action="Index" asp-route-export="true" asp-route-q="@ViewBag.Q" asp-route-exhibitionId="@ViewBag.ExhibitionId" asp-route-sale="@sale" asp-route-payment="@payment" class="btn btn-soft"><i class="bi bi-download me-1"></i>Export CSV</a>
+        <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Forward a painting</a>
+    </div>
+</div>
+<form method="get" class="filters">
+    <div class="search"><i class="bi bi-search"></i><input type="search" name="q" value="@ViewBag.Q" class="form-control" placeholder="Search painting, student or buyer…" data-debounce /></div>
+    <select name="exhibitionId" class="form-select" data-autosubmit asp-items="ViewBag.Exhibitions"><option value="">All exhibitions</option></select>
+    <select name="sale" class="form-select" data-autosubmit asp-items="Ui.EnumItems(sale)"><option value="">Any sale status</option></select>
+    <select name="payment" class="form-select" data-autosubmit asp-items="Ui.EnumItems(payment)"><option value="">Any payout</option></select>
+    @if (hasFilter) { <a asp-action="Index" class="btn btn-ghost btn-sm">Clear</a> }
+</form>
+@if (Model.Count == 0)
+{
+    <div class="panel"><div class="panel-body"><partial name="_Empty" model='("bi-bag", "No listings match", "Forward a Best-graded painting to an exhibition to get started.")' /></div></div>
+}
+else
+{
+    <div class="panel panel-flush"><div class="table-responsive"><table class="table-x">
+        <thead><tr><th></th><th>Painting</th><th>Exhibition</th><th class="num">Asking</th><th>Status</th><th class="num">Sold for</th><th class="num">Net to student</th><th>Payout</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var l in Model)
+        {
+            <tr>
+                <td style="width:1%"><img class="thumb-sm" src="@(l.Submission.ThumbnailPath ?? l.Submission.ImageFilePath)" alt="" loading="lazy" /></td>
+                <td><a asp-controller="Submissions" asp-action="Details" asp-route-id="@l.SubmissionId" class="row-title">@l.Submission.PaintingTitle</a><div class="row-sub">@l.Submission.Student.FullName</div></td>
+                <td>@l.Exhibition.ExhibitionName<div class="row-sub">@l.Exhibition.City</div></td>
+                <td class="num">@Ui.Money(l.StudentQuotedPrice)</td>
+                <td>@Html.Chip(l.SaleStatus)</td>
+                <td class="num">@Ui.Money(l.FinalSalePrice)</td>
+                <td class="num">@Ui.Money(l.NetPayableToStudent)</td>
+                <td>@if (l.SaleStatus == SaleStatus.Sold) { @Html.Chip(l.PaymentStatus) } else { <span class="text-muted">—</span> }</td>
+                <td class="actions">
+                    @if (l.SaleStatus == SaleStatus.Sold) { <a asp-action="Receipt" asp-route-id="@l.ExhibitionListingId" class="btn btn-sm btn-ghost" title="Receipt"><i class="bi bi-receipt"></i></a> }
+                    <a asp-action="Sale" asp-route-id="@l.ExhibitionListingId" class="btn btn-sm btn-soft">Manage</a>
+                </td>
+            </tr>
+        }
+        </tbody></table></div></div>
+    <partial name="_Pager" model="(IPaged)Model" />
+}

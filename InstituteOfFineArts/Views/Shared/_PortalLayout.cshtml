@@ -1,0 +1,168 @@
+@{
+    var ctrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var act = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    var name = User.FindFirst("full_name")?.Value ?? User.Identity?.Name ?? "";
+    var role = User.IsInRole(Roles.Admin) ? Roles.Admin : User.IsInRole(Roles.Manager) ? Roles.Manager
+             : User.IsInRole(Roles.Staff) ? Roles.Staff : User.IsInRole(Roles.Student) ? Roles.Student : "";
+    var inst = Inst.Value;
+
+    async Task Item(string controller, string action, string icon, string label, params string[] actions)
+    {
+        var active = ctrl == controller && (actions.Length == 0 || actions.Contains(act));
+        <li><a asp-controller="@controller" asp-action="@action" class="@(active ? "active" : "")"><i class="bi @icon"></i><span>@label</span></a></li>
+    }
+}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <partial name="_Head" />
+    @await RenderSectionAsync("Head", required: false)
+</head>
+<body class="portal">
+    <div class="app">
+        <aside class="sidebar no-print" aria-label="Navigation">
+            <a asp-controller="Dashboard" asp-action="Index" class="brand">
+                <span class="brand-mark"><partial name="_Logo" /></span>
+                <span class="brand-text"><strong>@inst.Name</strong><small>@role portal</small></span>
+            </a>
+
+            <nav>
+                <div class="nav-group">
+                    <div class="nav-group-title">Overview</div>
+                    <ul class="nav-x">@{ await Item("Dashboard", "Index", "bi-grid-1x2", "Dashboard"); }</ul>
+                </div>
+
+                @if (role == Roles.Student)
+                {
+                    <div class="nav-group">
+                        <div class="nav-group-title">Compete</div>
+                        <ul class="nav-x">
+                            @{
+                                await Item("Student", "Competitions", "bi-trophy", "Competitions", "Competitions", "Details");
+                                await Item("Student", "Upload", "bi-cloud-arrow-up", "Upload a painting", "Upload");
+                            }
+                        </ul>
+                    </div>
+                    <div class="nav-group">
+                        <div class="nav-group-title">My work</div>
+                        <ul class="nav-x">
+                            @{
+                                await Item("Student", "Submissions", "bi-images", "My submissions", "Submissions", "SubmissionDetails", "Edit");
+                                await Item("Student", "Feedback", "bi-chat-square-heart", "Grades & feedback", "Feedback");
+                                await Item("Student", "Awards", "bi-award", "My awards", "Awards");
+                                await Item("Student", "Exhibitions", "bi-shop", "Exhibitions & sales", "Exhibitions");
+                            }
+                        </ul>
+                    </div>
+                    <div class="nav-group">
+                        <div class="nav-group-title">Explore</div>
+                        <ul class="nav-x">@{ await Item("Gallery", "Index", "bi-palette2", "Public gallery"); }</ul>
+                    </div>
+                }
+                else
+                {
+                    <div class="nav-group">
+                        <div class="nav-group-title">Programme</div>
+                        <ul class="nav-x">
+                            @{
+                                await Item("Competitions", "Index", "bi-trophy", "Competitions");
+                                await Item("Submissions", "Index", "bi-images", "Submissions");
+                                await Item("Awards", "Index", "bi-award", "Awards");
+                            }
+                        </ul>
+                    </div>
+                    <div class="nav-group">
+                        <div class="nav-group-title">Exhibitions</div>
+                        <ul class="nav-x">
+                            @{
+                                await Item("Exhibitions", "Index", "bi-building", "Exhibitions");
+                                await Item("Listings", "Index", "bi-bag-check", "Listings & sales");
+                            }
+                        </ul>
+                    </div>
+                    <div class="nav-group">
+                        <div class="nav-group-title">People</div>
+                        <ul class="nav-x">
+                            @{
+                                await Item("Students", "Index", "bi-mortarboard", "Students");
+                                await Item("StaffMembers", "Index", "bi-person-workspace", "Staff");
+                                if (role == Roles.Admin) { await Item("Users", "Index", "bi-shield-lock", "Accounts"); }
+                            }
+                        </ul>
+                    </div>
+                    <div class="nav-group">
+                        <div class="nav-group-title">Insight</div>
+                        <ul class="nav-x">
+                            @{
+                                await Item("Reports", "Index", "bi-bar-chart-line", "Reports");
+                                if (role == Roles.Admin) { await Item("Audit", "Index", "bi-journal-text", "Audit log"); }
+                            }
+                        </ul>
+                    </div>
+                    @if (role is Roles.Admin or Roles.Manager)
+                    {
+                        <div class="nav-group">
+                            <div class="nav-group-title">Communication</div>
+                            <ul class="nav-x">
+                                @{
+                                    await Item("Announcements", "Index", "bi-megaphone", "Announcements");
+                                    await Item("Messages", "Index", "bi-inbox", "Contact inbox");
+                                }
+                            </ul>
+                        </div>
+                    }
+                }
+            </nav>
+
+            <div class="sidebar-foot">
+                <ul class="nav-x mb-3">
+                    <li><a asp-controller="Home" asp-action="Index"><i class="bi bi-box-arrow-up-right"></i><span>Public website</span></a></li>
+                </ul>
+                <div class="sidebar-user">
+                    @Html.Avatar(name)
+                    <div class="who"><strong>@name</strong><small>@role</small></div>
+                </div>
+            </div>
+        </aside>
+        <div class="sidebar-backdrop"></div>
+
+        <div class="main">
+            <header class="topbar no-print">
+                <button class="top-btn d-lg-none" type="button" data-nav-toggle aria-label="Open menu"><i class="bi bi-list fs-5"></i></button>
+                <div class="crumb d-none d-sm-block">@inst.ShortName <i class="bi bi-chevron-right mx-1" style="font-size:.65rem"></i> <strong>@(ViewData["Title"] ?? "Portal")</strong></div>
+                <div class="spacer"></div>
+                <button type="button" class="top-btn" data-theme-toggle aria-label="Toggle dark mode"><i class="bi bi-moon-stars"></i></button>
+                @await Component.InvokeAsync("NotificationBell")
+                <div class="dropdown">
+                    <button class="btn btn-ghost d-flex align-items-center gap-2 p-1 pe-2 rounded-pill" data-bs-toggle="dropdown" aria-expanded="false" style="border:1px solid var(--line);background:var(--surface)">
+                        @Html.Avatar(name, "sm")
+                        <span class="d-none d-md-inline small fw-semibold text-body">@name</span>
+                        <i class="bi bi-chevron-down small text-muted"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" style="min-width:240px">
+                        <li class="px-3 py-2"><div class="fw-semibold">@name</div><div class="small text-muted">@User.Identity?.Name</div></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile"><i class="bi bi-person-circle"></i>My profile</a></li>
+                        <li><a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword"><i class="bi bi-key"></i>Change password</a></li>
+                        <li><a class="dropdown-item" asp-controller="Notifications" asp-action="Index"><i class="bi bi-bell"></i>Notifications</a></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li>
+                            <form asp-controller="Account" asp-action="Logout" method="post" data-no-loading>
+                                <button class="dropdown-item text-danger" type="submit"><i class="bi bi-box-arrow-right text-danger"></i>Sign out</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </header>
+
+            <main class="content">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <partial name="_Toasts" />
+    <partial name="_Scripts" />
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

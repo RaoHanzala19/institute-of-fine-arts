@@ -1,0 +1,50 @@
+@model PagedList<Staff>
+@{
+    ViewData["Title"] = "Staff";
+    var admin = User.IsInRole(Roles.Admin);
+    var active = (bool?)ViewBag.Active;
+}
+<div class="page-head">
+    <div><h1 class="page-title">Staff</h1><p class="page-sub">Instructors, evaluators and administrators of the programme.</p></div>
+    <div class="page-actions">
+        <a asp-action="Index" asp-route-export="true" asp-route-q="@ViewBag.Q" asp-route-active="@active" class="btn btn-soft"><i class="bi bi-download me-1"></i>Export CSV</a>
+        @if (admin) { <a asp-action="Create" class="btn btn-primary"><i class="bi bi-person-plus me-1"></i>Add staff</a> }
+    </div>
+</div>
+<form method="get" class="filters">
+    <div class="search"><i class="bi bi-search"></i><input type="search" name="q" value="@ViewBag.Q" class="form-control" placeholder="Search name, email or designation…" data-debounce /></div>
+    <select name="active" class="form-select" data-autosubmit>
+        <option value="">Active &amp; inactive</option>
+        <option value="true" selected="@(active == true)">Active</option>
+        <option value="false" selected="@(active == false)">Inactive</option>
+    </select>
+    @if (!string.IsNullOrEmpty((string?)ViewBag.Q) || active.HasValue) { <a asp-action="Index" class="btn btn-ghost btn-sm">Clear</a> }
+</form>
+@if (Model.Count == 0)
+{
+    <div class="panel"><div class="panel-body"><partial name="_Empty" model='("bi-person-workspace", "No staff found", "Try changing the search or filters.")' /></div></div>
+}
+else
+{
+    <div class="grid-cards">
+        @foreach (var s in Model)
+        {
+            <div class="comp-card">
+                <div class="d-flex align-items-center gap-3">
+                    @Html.Avatar(s.FullName, "lg")
+                    <div class="min-w-0">
+                        <h3 class="fs-5 mb-0"><a asp-action="Details" asp-route-id="@s.StaffId" class="text-reset stretched-link">@s.FullName</a></h3>
+                        <div class="text-muted small">@(s.Designation ?? "Instructor")</div>
+                    </div>
+                </div>
+                <div class="small text-muted"><i class="bi bi-book me-1"></i>@(s.HandlesSubject ?? "—")</div>
+                <div class="small text-muted"><i class="bi bi-envelope me-1"></i>@s.ApplicationUser.Email</div>
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                    @if (s.IsActive) { <span class="chip chip-success"><i class="chip-dot"></i>Active</span> } else { <span class="chip chip-neutral"><i class="chip-dot"></i>Inactive</span> }
+                    <span class="row-sub">Joined @Ui.Date(s.DateJoined, "MMM yyyy")</span>
+                </div>
+            </div>
+        }
+    </div>
+    <partial name="_Pager" model="(IPaged)Model" />
+}

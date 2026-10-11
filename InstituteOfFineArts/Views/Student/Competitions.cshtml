@@ -1,0 +1,42 @@
+@model List<StudentCompetitionVm>
+@{
+    ViewData["Title"] = "Competitions";
+    var tab = (string)ViewBag.Tab;
+}
+<div class="page-head">
+    <div><h1 class="page-title">Competitions</h1><p class="page-sub">Find a theme, read the rules and enter your best painting.</p></div>
+    <div class="page-actions"><div class="nav-pills-x"><a asp-action="Competitions" asp-route-tab="open" class="@(tab != "past" ? "active" : "")">Open &amp; upcoming</a><a asp-action="Competitions" asp-route-tab="past" class="@(tab == "past" ? "active" : "")">Past</a></div></div>
+</div>
+<form method="get" class="filters">
+    <input type="hidden" name="tab" value="@tab" />
+    <div class="search"><i class="bi bi-search"></i><input type="search" name="q" value="@ViewBag.Q" class="form-control" placeholder="Search competitions…" data-debounce /></div>
+</form>
+@if (Model.Count == 0)
+{
+    <div class="panel"><div class="panel-body"><partial name="_Empty" model='("bi-trophy", "Nothing here", "There are no competitions in this list at the moment.")' /></div></div>
+}
+else
+{
+    <div class="grid-cards wide">
+        @foreach (var r in Model)
+        {
+            var c = r.Competition;
+            <div class="comp-card">
+                <div class="d-flex justify-content-between align-items-start gap-2"><div class="theme">@(c.Theme ?? "Competition")</div>@Html.Chip(c.Status)</div>
+                <h3><a asp-action="Details" asp-route-id="@c.CompetitionId" class="text-reset stretched-link">@c.Title</a></h3>
+                <p class="text-muted small mb-0" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">@c.Description</p>
+                <dl class="facts mb-0">
+                    <div><dt>Deadline</dt><dd>@Ui.Date(c.EndDate)</dd></div>
+                    <div><dt>Prize pool</dt><dd>@Ui.Money(c.CompetitionAwards.Sum(a => a.PrizeMoney ?? 0))</dd></div>
+                </dl>
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                    @if (r.Mine != null) { <span class="chip chip-success"><i class="bi bi-check2"></i>You entered</span> }
+                    else if (c.Status == CompetitionStatus.Concluded) { <span class="chip chip-neutral">Closed</span> }
+                    else if (c.StartDate > DateTime.Now) { <span class="chip chip-info">Opens @Ui.Date(c.StartDate)</span> }
+                    else if (c.DeadlinePassed) { <span class="chip chip-danger">Deadline passed</span> }
+                    else { <span class="countdown @(c.DaysLeft <= 3 ? "urgent" : "")"><i class="bi bi-hourglass-split"></i>@c.DaysLeft day@(c.DaysLeft == 1 ? "" : "s") left</span> }
+                </div>
+            </div>
+        }
+    </div>
+}

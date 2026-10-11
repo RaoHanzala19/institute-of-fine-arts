@@ -1,0 +1,15 @@
+@{
+    ViewData["Title"] = "Reports";
+}
+<div class="page-head"><div><h1 class="page-title">Reports</h1><p class="page-sub">Filterable, exportable and print-friendly summaries.</p></div></div>
+<div class="row g-4">
+    <div class="col-md-6 col-xl-4"><a asp-action="Submissions" class="panel d-block h-100 text-reset"><div class="panel-body p-4">
+        <div class="feature-ico"><i class="bi bi-images"></i></div><h3>Submission report</h3>
+        <p class="text-muted mb-0">Filter by competition, date range and grade. See the grade mix and export every row.</p></div></a></div>
+    <div class="col-md-6 col-xl-4"><a asp-action="Sales" class="panel d-block h-100 text-reset"><div class="panel-body p-4">
+        <div class="feature-ico"><i class="bi bi-cash-coin"></i></div><h3>Sales &amp; payouts</h3>
+        <p class="text-muted mb-0">Sold paintings, institute commission, what students are owed and what has been paid.</p></div></a></div>
+    <div class="col-md-6 col-xl-4"><a asp-action="Competitions" class="panel d-block h-100 text-reset"><div class="panel-body p-4">
+        <div class="feature-ico"><i class="bi bi-trophy"></i></div><h3>Competition summary</h3>
+        <p class="text-muted mb-0">Entries, evaluations, disqualifications and awards issued for every competition.</p></div></a></div>
+</div>

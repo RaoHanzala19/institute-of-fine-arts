@@ -1,0 +1,99 @@
+@{
+    var ctrl = ViewContext.RouteData.Values["controller"]?.ToString();
+    var act = ViewContext.RouteData.Values["action"]?.ToString();
+    string Active(string c, string? a = null) => ctrl == c && (a == null || act == a) ? "active" : "";
+    var authed = User.Identity?.IsAuthenticated == true;
+    var name = User.FindFirst("full_name")?.Value ?? User.Identity?.Name;
+    var inst = Inst.Value;
+}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <partial name="_Head" />
+    @await RenderSectionAsync("Head", required: false)
+</head>
+<body class="public">
+    <header class="site-header no-print">
+        <div class="container d-flex align-items-center gap-3">
+            <a asp-controller="Home" asp-action="Index" class="brand">
+                <span class="brand-mark"><partial name="_Logo" /></span>
+                <span class="brand-text"><strong>@inst.Name</strong><small>Est. Karachi</small></span>
+            </a>
+            <nav class="site-nav ms-auto d-none d-lg-flex" aria-label="Main">
+                <a class="nav-item-x @Active("Home", "Index")" asp-controller="Home" asp-action="Index">Home</a>
+                <a class="nav-item-x @Active("Gallery")" asp-controller="Gallery" asp-action="Index">Gallery</a>
+                <a class="nav-item-x @Active("Home", "About")" asp-controller="Home" asp-action="About">About</a>
+                <a class="nav-item-x @Active("Home", "FAQ")" asp-controller="Home" asp-action="FAQ">FAQ</a>
+                <a class="nav-item-x @Active("Home", "Contact")" asp-controller="Home" asp-action="Contact">Contact</a>
+            </nav>
+            <div class="d-flex align-items-center gap-2 ms-auto ms-lg-3">
+                <button type="button" class="top-btn" data-theme-toggle aria-label="Toggle dark mode"><i class="bi bi-moon-stars"></i></button>
+                @if (authed)
+                {
+                    <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary btn-sm"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-sm">Sign in <i class="bi bi-arrow-right ms-1"></i></a>
+                }
+                <button class="top-btn d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNav" aria-label="Menu"><i class="bi bi-list"></i></button>
+            </div>
+        </div>
+        <div class="collapse d-lg-none border-top" id="mobileNav" style="border-color:var(--line-2)!important">
+            <div class="container py-2 d-grid gap-1">
+                <a class="nav-item-x @Active("Home", "Index")" asp-controller="Home" asp-action="Index">Home</a>
+                <a class="nav-item-x @Active("Gallery")" asp-controller="Gallery" asp-action="Index">Gallery</a>
+                <a class="nav-item-x @Active("Home", "About")" asp-controller="Home" asp-action="About">About</a>
+                <a class="nav-item-x @Active("Home", "FAQ")" asp-controller="Home" asp-action="FAQ">FAQ</a>
+                <a class="nav-item-x @Active("Home", "Contact")" asp-controller="Home" asp-action="Contact">Contact</a>
+            </div>
+        </div>
+    </header>
+
+    <main>@RenderBody()</main>
+
+    <footer class="site-footer no-print">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="brand px-0"><span class="brand-mark"><partial name="_Logo" /></span>
+                        <span class="brand-text"><strong class="text-white">@inst.Name</strong><small>@inst.ShortName</small></span></div>
+                    <p class="small mt-2" style="max-width:34ch;opacity:.75">@inst.Tagline. A home for young painters to compete, be evaluated, exhibit and sell.</p>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <h6>Explore</h6>
+                    <ul>
+                        <li><a asp-controller="Gallery" asp-action="Index">Gallery</a></li>
+                        <li><a asp-controller="Home" asp-action="About">About us</a></li>
+                        <li><a asp-controller="Home" asp-action="FAQ">FAQ</a></li>
+                        <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <h6>Portal</h6>
+                    <ul>
+                        <li><a asp-controller="Account" asp-action="Login">Sign in</a></li>
+                        <li><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4">
+                    <h6>Visit us</h6>
+                    <ul class="small">
+                        <li><i class="bi bi-geo-alt me-2"></i>@inst.Address</li>
+                        <li><i class="bi bi-telephone me-2"></i>@inst.Phone</li>
+                        <li><i class="bi bi-envelope me-2"></i>@inst.Email</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom d-flex flex-wrap justify-content-between gap-2">
+                <span>© @DateTime.Now.Year @inst.Name. All rights reserved.</span>
+                <span>Made with <i class="bi bi-brush"></i> for artists</span>
+            </div>
+        </div>
+    </footer>
+
+    <partial name="_Toasts" />
+    <partial name="_Scripts" />
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

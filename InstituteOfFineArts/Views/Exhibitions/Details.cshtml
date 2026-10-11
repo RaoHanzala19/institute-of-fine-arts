@@ -1,0 +1,70 @@
+@model ExhibitionDetailsVm
+@{
+    var e = Model.Exhibition;
+    ViewData["Title"] = e.ExhibitionName;
+    var active = e.Status is ExhibitionStatus.Upcoming or ExhibitionStatus.Ongoing;
+}
+<div class="page-head">
+    <div>
+        <a asp-action="Index" class="back-link"><i class="bi bi-arrow-left"></i>All exhibitions</a>
+        <div class="mb-2">@Html.Chip(e.Status)</div>
+        <h1 class="page-title">@e.ExhibitionName</h1>
+        <p class="page-sub"><i class="bi bi-geo-alt me-1"></i>@e.Venue, @e.City, @e.Country · @Ui.Date(e.ExhibitionStartDate) – @Ui.Date(e.ExhibitionEndDate)</p>
+    </div>
+    <div class="page-actions">
+        @if (active) { <a asp-controller="Listings" asp-action="Create" asp-route-exhibitionId="@e.ExhibitionId" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Forward a painting</a> }
+        <a asp-action="Edit" asp-route-id="@e.ExhibitionId" class="btn btn-soft"><i class="bi bi-pencil me-1"></i>Edit</a>
+        @if (Model.Listings.Count == 0)
+        {
+            <form asp-action="Delete" asp-route-id="@e.ExhibitionId" method="post" class="d-inline"><button class="btn btn-danger-soft btn-icon" type="submit" data-confirm="This exhibition has no paintings and will be deleted." data-confirm-title="Delete exhibition?" data-confirm-ok="Delete"><i class="bi bi-trash"></i></button></form>
+        }
+    </div>
+</div>
+
+<div class="stat-grid">
+    <div class="stat"><span class="stat-icon brand"><i class="bi bi-images"></i></span><div><div class="stat-value">@Model.Listings.Count</div><div class="stat-label">Paintings listed</div></div></div>
+    <div class="stat"><span class="stat-icon success"><i class="bi bi-cash-coin"></i></span><div><div class="stat-value sm">@Ui.Money(Model.Gross)</div><div class="stat-label">Gross sales</div></div></div>
+    <div class="stat"><span class="stat-icon gold"><i class="bi bi-percent"></i></span><div><div class="stat-value sm">@Ui.Money(Model.Commission)</div><div class="stat-label">Commission @e.CommissionPercent.ToString("0.#")%</div></div></div>
+    <div class="stat"><span class="stat-icon warning"><i class="bi bi-wallet2"></i></span><div><div class="stat-value sm">@Ui.Money(Model.Outstanding)</div><div class="stat-label">Still owed to students</div></div></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="panel">
+            <div class="panel-head"><h3>Listed paintings</h3><a asp-controller="Listings" asp-action="Index" asp-route-exhibitionId="@e.ExhibitionId" class="btn btn-sm btn-soft">Sales view</a></div>
+            <div class="panel-flush">
+                @if (Model.Listings.Count == 0) { <partial name="_Empty" model='("bi-image", "Nothing listed yet", "Forward paintings graded Best to this exhibition.")' /> }
+                else
+                {
+                    <div class="table-responsive"><table class="table-x">
+                        <thead><tr><th></th><th>Painting</th><th class="num">Asking</th><th>Status</th><th class="num">Sold for</th><th>Payout</th><th></th></tr></thead>
+                        <tbody>
+                        @foreach (var l in Model.Listings)
+                        {
+                            <tr>
+                                <td style="width:1%"><img class="thumb-sm" src="@(l.Submission.ThumbnailPath ?? l.Submission.ImageFilePath)" alt="" /></td>
+                                <td><a asp-controller="Submissions" asp-action="Details" asp-route-id="@l.SubmissionId" class="row-title">@l.Submission.PaintingTitle</a><div class="row-sub">@l.Submission.Student.FullName</div></td>
+                                <td class="num">@Ui.Money(l.StudentQuotedPrice)</td>
+                                <td>@Html.Chip(l.SaleStatus)</td>
+                                <td class="num">@Ui.Money(l.FinalSalePrice)</td>
+                                <td>@if (l.SaleStatus == SaleStatus.Sold) { @Html.Chip(l.PaymentStatus) } else { <span class="text-muted">—</span> }</td>
+                                <td class="actions"><a asp-controller="Listings" asp-action="Sale" asp-route-id="@l.ExhibitionListingId" class="btn btn-sm btn-soft">Manage</a></td>
+                            </tr>
+                        }
+                        </tbody></table></div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 d-grid gap-4 align-content-start">
+        <div class="panel"><div class="panel-body">
+            <h4>About</h4><p class="text-muted pre">@(e.Description ?? "No description.")</p>
+            @if (!string.IsNullOrWhiteSpace(e.AdditionalNotes)) { <h6 class="mt-3">Notes</h6><p class="text-muted pre mb-0">@e.AdditionalNotes</p> }
+        </div></div>
+        <div class="panel"><div class="panel-body"><dl class="kv mb-0">
+            <dt>Created by</dt><dd>@(e.CreatedBy?.FullName ?? "—")</dd>
+            <dt>Created</dt><dd>@Ui.Date(e.CreatedAt)</dd>
+            <dt>Commission</dt><dd>@e.CommissionPercent.ToString("0.#")% of each sale</dd>
+        </dl></div></div>
+    </div>
+</div>

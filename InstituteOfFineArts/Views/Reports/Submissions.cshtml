@@ -1,0 +1,39 @@
+@model SubmissionReportVm
+@{
+    ViewData["Title"] = "Submission report";
+}
+<div class="page-head">
+    <div><a asp-action="Index" class="back-link"><i class="bi bi-arrow-left"></i>Reports</a><h1 class="page-title">Submission report</h1><p class="page-sub">@Model.Rows.Count painting(s) match the filters.</p></div>
+    <div class="page-actions">
+        <a asp-action="Submissions" asp-route-export="true" asp-route-competitionId="@Model.CompetitionId" asp-route-from="@Model.From?.ToString("yyyy-MM-dd")" asp-route-to="@Model.To?.ToString("yyyy-MM-dd")" asp-route-grade="@Model.Grade" class="btn btn-soft"><i class="bi bi-download me-1"></i>CSV</a>
+        <button class="btn btn-primary" type="button" data-print><i class="bi bi-printer me-1"></i>Print</button>
+    </div>
+</div>
+<form method="get" class="filters">
+    <select name="competitionId" class="form-select" data-autosubmit>
+        <option value="">All competitions</option>
+        @foreach (var c in Model.Competitions) { <option value="@c.CompetitionId" selected="@(Model.CompetitionId == c.CompetitionId)">@c.Title</option> }
+    </select>
+    <select name="grade" class="form-select" data-autosubmit asp-items="Ui.EnumItems(Model.Grade)"><option value="">All grades</option></select>
+    <label class="small text-muted">From</label><input type="date" name="from" value="@Model.From?.ToString("yyyy-MM-dd")" class="form-control" onchange="this.form.submit()" />
+    <label class="small text-muted">To</label><input type="date" name="to" value="@Model.To?.ToString("yyyy-MM-dd")" class="form-control" onchange="this.form.submit()" />
+    @if (Model.CompetitionId.HasValue || Model.Grade.HasValue || Model.From.HasValue || Model.To.HasValue) { <a asp-action="Submissions" class="btn btn-ghost btn-sm">Clear</a> }
+</form>
+<div class="row g-4">
+    <div class="col-lg-8"><div class="panel panel-flush"><div class="table-responsive"><table class="table-x">
+        <thead><tr><th>Painting</th><th>Student</th><th>Competition</th><th>Submitted</th><th>Grade</th></tr></thead>
+        <tbody>
+        @if (Model.Rows.Count == 0) { <tr><td colspan="5"><partial name="_Empty" model='("bi-table", "No rows", "Adjust the filters to see results.")' /></td></tr> }
+        @foreach (var s in Model.Rows)
+        {
+            <tr>
+                <td><a asp-controller="Submissions" asp-action="Details" asp-route-id="@s.SubmissionId" class="row-title">@s.PaintingTitle</a></td>
+                <td>@s.Student.FullName<div class="row-sub">@s.Student.EnrollmentNumber</div></td>
+                <td>@s.Competition.Title</td>
+                <td class="row-sub">@Ui.DateTimeText(s.SubmittedAt)@(s.IsLateSubmission ? " · late" : "")</td>
+                <td>@Html.Chip(s.Grade)</td>
+            </tr>
+        }
+        </tbody></table></div></div></div>
+    <div class="col-lg-4"><div class="panel"><div class="panel-head"><h3>Grade mix</h3></div><div class="panel-body"><div class="chart-box"><canvas data-chart="@Ui.ChartJson("doughnut", Model.GradeMix)"></canvas></div></div></div></div>
+</div>

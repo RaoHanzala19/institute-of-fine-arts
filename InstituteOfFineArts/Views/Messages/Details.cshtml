@@ -1,0 +1,16 @@
+@model ContactMessage
+@{
+    ViewData["Title"] = Model.Subject;
+}
+<div class="page-head">
+    <div><a asp-action="Index" class="back-link"><i class="bi bi-arrow-left"></i>Inbox</a><h1 class="page-title">@Model.Subject</h1></div>
+    <div class="page-actions">
+        <a href="mailto:@Model.Email?subject=Re: @Uri.EscapeDataString(Model.Subject)" class="btn btn-primary"><i class="bi bi-reply me-1"></i>Reply by email</a>
+        <form asp-action="ToggleResolved" asp-route-id="@Model.ContactMessageId" method="post"><button class="btn btn-soft" type="submit"><i class="bi bi-check2-circle me-1"></i>@(Model.IsResolved ? "Re-open" : "Mark resolved")</button></form>
+        <form asp-action="Delete" asp-route-id="@Model.ContactMessageId" method="post"><button class="btn btn-danger-soft btn-icon" type="submit" data-confirm="This message will be deleted permanently." data-confirm-title="Delete message?" data-confirm-ok="Delete"><i class="bi bi-trash"></i></button></form>
+    </div>
+</div>
+<div class="row"><div class="col-lg-8"><div class="panel"><div class="panel-body p-4">
+    <div class="d-flex align-items-center gap-3 mb-4">@Html.Avatar(Model.Name, "lg")<div><div class="fw-semibold fs-5">@Model.Name</div><div class="text-muted"><a href="mailto:@Model.Email">@Model.Email</a> · @Ui.DateTimeText(Model.CreatedAt)</div></div>@if (Model.IsResolved) { <span class="chip chip-success ms-auto">Resolved</span> }</div>
+    <div class="pre" style="line-height:1.7">@Model.Message</div>
+</div></div></div></div>

@@ -1,0 +1,69 @@
+@model LoginVm
+@inject IWebHostEnvironment Env
+@{
+    ViewData["Title"] = "Sign in";
+    var demo = Env.IsDevelopment() && Inst.Value.SeedDemoData;
+}
+<div class="auth-wrap">
+    <aside class="auth-art">
+        <a asp-controller="Home" asp-action="Index" class="brand px-0 text-white">
+            <span class="brand-mark"><partial name="_Logo" /></span>
+            <span class="brand-text"><strong>@Inst.Value.Name</strong><small>@Inst.Value.ShortName portal</small></span>
+        </a>
+        <div>
+            <span class="eyebrow" style="color:#fff">Welcome back</span>
+            <h2 class="mt-3 mb-3">Your studio, your feedback, your gallery.</h2>
+            <p class="opacity-75" style="max-width:44ch">Sign in to upload paintings, follow your grades, collect awards and track exhibition sales.</p>
+            @if (demo)
+            {
+                <div class="mt-4">
+                    <div class="small text-uppercase opacity-75 mb-2" style="letter-spacing:.14em">Demo accounts — click to fill</div>
+                    <div class="demo-creds">
+                        <button type="button" data-fill-login data-email="admin@ifa.edu" data-password="Admin@12345"><span><i class="bi bi-shield-lock me-2"></i>Administrator</span><span class="opacity-75">admin@ifa.edu</span></button>
+                        <button type="button" data-fill-login data-email="manager@ifa.edu" data-password="Manager@12345"><span><i class="bi bi-briefcase me-2"></i>Manager</span><span class="opacity-75">manager@ifa.edu</span></button>
+                        <button type="button" data-fill-login data-email="sara.khan@ifa.edu" data-password="Staff@12345"><span><i class="bi bi-person-workspace me-2"></i>Staff</span><span class="opacity-75">sara.khan@ifa.edu</span></button>
+                        <button type="button" data-fill-login data-email="ayesha.siddiqui@ifa.edu" data-password="Student@12345"><span><i class="bi bi-mortarboard me-2"></i>Student</span><span class="opacity-75">ayesha.siddiqui@ifa.edu</span></button>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="small opacity-50">© @DateTime.Now.Year @Inst.Value.Name</div>
+    </aside>
+
+    <section class="auth-form">
+        <div class="auth-card">
+            <h1 class="mb-1" style="font-size:2.2rem">Sign in</h1>
+            <p class="text-muted mb-4">Use the email and password your institute gave you.</p>
+
+            <form asp-action="Login" method="post" novalidate>
+                <input type="hidden" asp-for="ReturnUrl" />
+                <div asp-validation-summary="ModelOnly" class="alert alert-soft-danger"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <input asp-for="Email" class="form-control" autocomplete="username" autofocus placeholder="you@ifa.edu" />
+                    </div>
+                    <span asp-validation-for="Email"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label"></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                        <input asp-for="Password" class="form-control" autocomplete="current-password" placeholder="••••••••" />
+                        <button class="btn btn-soft" type="button" data-toggle-password="#Password" tabindex="-1" aria-label="Show password"><i class="bi bi-eye"></i></button>
+                    </div>
+                    <span asp-validation-for="Password"></span>
+                </div>
+                <div class="form-check mb-4">
+                    <input asp-for="RememberMe" class="form-check-input" />
+                    <label asp-for="RememberMe" class="form-check-label small"></label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg w-100">Sign in <i class="bi bi-arrow-right ms-1"></i></button>
+            </form>
+
+            <p class="small text-muted mt-4 mb-0">Accounts are created by the institute office. Forgot your password? Ask an administrator to reset it, or <a asp-controller="Home" asp-action="Contact">contact us</a>.</p>
+        </div>
+    </section>
+</div>

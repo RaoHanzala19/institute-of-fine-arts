@@ -1,0 +1,44 @@
+@{
+    ViewData["Title"] = "FAQ";
+    var faqs = new (string Q, string A)[]
+    {
+        ("How do I get an account?", "Accounts are created by the institute's administrators when you enrol. You will receive your email address and a starting password; you can change the password after your first sign-in."),
+        ("What file format can I upload?", "Only JPEG images (.jpg or .jpeg) up to 10 MB and at least 300 × 300 pixels. We check the file content, not just the extension, so renaming another format will not work."),
+        ("How many paintings can I submit per competition?", "One. You can edit or withdraw your entry any time before the competition deadline."),
+        ("What if I submit after the deadline?", "Late entries are accepted by the system but automatically graded Disqualified, and cannot win awards. You must tick a confirmation box before uploading late."),
+        ("What must go with the painting?", "A poem, quotation, story or description of at least ten characters, so the jury understands the idea behind the work."),
+        ("How are paintings graded?", "Instructors choose one of Best, Better, Good, Moderate, Normal or Disqualified and write positive points, negative points, areas of improvement and general remarks — all visible to you."),
+        ("Who can win awards?", "Awards are issued after a competition concludes, only to evaluated, non-disqualified paintings. Each award tier is given once and comes with a printable certificate."),
+        ("What happens if my painting is chosen for an exhibition?", "Only paintings graded Best can be forwarded. You set an asking price with the staff, and the exhibition records any sale."),
+        ("How and when do I get paid?", "When a painting sells, the institute deducts a published commission percentage and records what you are owed. Once transferred, the payment date and amount appear in your Exhibitions page and you receive a notification."),
+        ("I forgot my password.", "Ask an administrator to reset it from the Accounts screen. After signing in with the temporary password, change it from your profile menu."),
+    };
+}
+<section class="hero" style="padding-bottom:2rem">
+    <div class="container">
+        <span class="eyebrow">Help centre</span>
+        <h1 style="max-width:14ch">Questions, <em>answered</em>.</h1>
+        <p class="lead">Everything students and visitors ask us most often.</p>
+    </div>
+</section>
+<section class="section pt-2">
+    <div class="container" style="max-width:860px">
+        <div class="accordion" id="faq">
+            @for (var i = 0; i < faqs.Length; i++)
+            {
+                <div class="accordion-item mb-2" style="border-radius:var(--radius);overflow:hidden">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button @(i == 0 ? "" : "collapsed") fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#q@(i)">@faqs[i].Q</button>
+                    </h2>
+                    <div id="q@(i)" class="accordion-collapse collapse @(i == 0 ? "show" : "")" data-bs-parent="#faq">
+                        <div class="accordion-body text-muted">@faqs[i].A</div>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="text-center mt-5">
+            <p class="text-muted">Still stuck?</p>
+            <a asp-controller="Home" asp-action="Contact" class="btn btn-primary">Contact the front desk</a>
+        </div>
+    </div>
+</section>

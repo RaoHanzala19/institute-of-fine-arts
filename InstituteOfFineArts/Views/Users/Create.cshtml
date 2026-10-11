@@ -1,0 +1,18 @@
+@model UserFormVm
+@{
+    ViewData["Title"] = "New account";
+}
+<div class="page-head"><div><a asp-action="Index" class="back-link"><i class="bi bi-arrow-left"></i>Accounts</a><h1 class="page-title">New admin / manager</h1></div></div>
+<div class="row"><div class="col-lg-7">
+    <form method="post" class="form-section" novalidate>
+        <div class="section-head"><span class="ico"><i class="bi bi-shield-lock"></i></span><div><h3>Account details</h3><p>Students and staff are enrolled from their own screens so their profiles are created together.</p></div></div>
+        <div asp-validation-summary="ModelOnly" class="alert alert-soft-danger"></div>
+        <div class="row g-3">
+            <div class="col-md-6"><label asp-for="FullName" class="form-label"></label><input asp-for="FullName" class="form-control" /><span asp-validation-for="FullName"></span></div>
+            <div class="col-md-6"><label asp-for="Role" class="form-label"></label><select asp-for="Role" class="form-select"><option>Manager</option><option>Admin</option></select><span asp-validation-for="Role"></span></div>
+            <div class="col-md-6"><label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control" autocomplete="off" /><span asp-validation-for="Email"></span></div>
+            <div class="col-md-6"><label asp-for="Password" class="form-label">Starting password</label><input asp-for="Password" type="password" class="form-control" autocomplete="new-password" /><span asp-validation-for="Password"></span></div>
+        </div>
+        <button class="btn btn-primary mt-4" type="submit">Create account</button>
+    </form>
+</div></div>

@@ -1,0 +1,42 @@
+@model PagedList<ExhibitionRow>
+@{
+    ViewData["Title"] = "Exhibitions";
+    var status = (ExhibitionStatus?)ViewBag.Status;
+}
+<div class="page-head">
+    <div><h1 class="page-title">Exhibitions</h1><p class="page-sub">Where the institute's best paintings are shown and sold.</p></div>
+    <div class="page-actions">
+        <a asp-action="Index" asp-route-export="true" asp-route-q="@ViewBag.Q" asp-route-status="@status" class="btn btn-soft"><i class="bi bi-download me-1"></i>Export CSV</a>
+        <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New exhibition</a>
+    </div>
+</div>
+<form method="get" class="filters">
+    <div class="search"><i class="bi bi-search"></i><input type="search" name="q" value="@ViewBag.Q" class="form-control" placeholder="Search name, venue or city…" data-debounce /></div>
+    <select name="status" class="form-select" data-autosubmit asp-items="Ui.EnumItems(status)"><option value="">All statuses</option></select>
+    @if (!string.IsNullOrEmpty((string?)ViewBag.Q) || status.HasValue) { <a asp-action="Index" class="btn btn-ghost btn-sm">Clear</a> }
+</form>
+@if (Model.Count == 0)
+{
+    <div class="panel"><div class="panel-body"><partial name="_Empty" model='("bi-building", "No exhibitions yet", "Schedule the first exhibition to start forwarding paintings.")' /></div></div>
+}
+else
+{
+    <div class="grid-cards wide">
+        @foreach (var r in Model)
+        {
+            var e = r.Exhibition;
+            <div class="comp-card">
+                <div class="d-flex justify-content-between align-items-start"><div class="theme">@e.City, @e.Country</div>@Html.Chip(e.Status)</div>
+                <h3><a asp-action="Details" asp-route-id="@e.ExhibitionId" class="text-reset stretched-link">@e.ExhibitionName</a></h3>
+                <div class="text-muted small"><i class="bi bi-geo-alt me-1"></i>@e.Venue</div>
+                <dl class="facts mb-0">
+                    <div><dt>Dates</dt><dd>@Ui.Date(e.ExhibitionStartDate, "dd MMM") – @Ui.Date(e.ExhibitionEndDate)</dd></div>
+                    <div><dt>Commission</dt><dd>@e.CommissionPercent.ToString("0.#")%</dd></div>
+                    <div><dt>Listed</dt><dd>@r.Listings painting(s)</dd></div>
+                    <div><dt>Sold</dt><dd>@r.Sold · @Ui.Money(r.Revenue)</dd></div>
+                </dl>
+            </div>
+        }
+    </div>
+    <partial name="_Pager" model="(IPaged)Model" />
+}

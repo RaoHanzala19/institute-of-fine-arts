@@ -1,0 +1,35 @@
+@model PagedList<Notification>
+@{
+    ViewData["Title"] = "Notifications";
+    var unread = (bool)ViewBag.Unread;
+    (string Icon, string Style) Look(NotificationType t) => t switch
+    {
+        NotificationType.Success => ("bi-trophy", "background:var(--success-soft);color:var(--success)"),
+        NotificationType.Warning => ("bi-exclamation-triangle", "background:var(--warning-soft);color:var(--warning)"),
+        _ => ("bi-info-circle", "background:var(--info-soft);color:var(--info)")
+    };
+}
+<div class="page-head">
+    <div><h1 class="page-title">Notifications</h1><p class="page-sub">Grades, awards, sales and updates about your work.</p></div>
+    <div class="page-actions">
+        <div class="nav-pills-x"><a asp-action="Index" class="@(unread ? "" : "active")">All</a><a asp-action="Index" asp-route-unread="true" class="@(unread ? "active" : "")">Unread</a></div>
+        <form asp-action="MarkAllRead" method="post" data-no-loading><button class="btn btn-soft btn-sm" type="submit"><i class="bi bi-check2-all me-1"></i>Mark all read</button></form>
+        <form asp-action="Clear" method="post" data-no-loading><button class="btn btn-ghost btn-sm" type="submit" data-confirm="All notifications you have already read will be deleted." data-confirm-title="Clear read notifications?" data-confirm-ok="Clear">Clear read</button></form>
+    </div>
+</div>
+<div class="panel panel-flush">
+    @if (Model.Count == 0) { <partial name="_Empty" model='("bi-bell-slash", unread ? "No unread notifications" : "Nothing here yet", "Updates about your work will appear here.")' /> }
+    @foreach (var n in Model)
+    {
+        var look = Look(n.Type);
+        <a asp-action="Open" asp-route-id="@n.NotificationId" class="notif @(n.IsRead ? "" : "unread")">
+            <span class="ico" style="@look.Style"><i class="bi @look.Icon"></i></span>
+            <span class="flex-grow-1">
+                <span class="title d-block">@n.Title</span>
+                @if (!string.IsNullOrEmpty(n.Message)) { <span class="text-muted d-block small">@n.Message</span> }
+                <span class="row-sub d-block mt-1">@Ui.DateTimeText(n.CreatedAt)</span>
+            </span>
+        </a>
+    }
+</div>
+<partial name="_Pager" model="(IPaged)Model" />

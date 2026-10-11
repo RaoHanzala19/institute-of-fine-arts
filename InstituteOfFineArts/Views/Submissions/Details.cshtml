@@ -1,0 +1,72 @@
+@model SubmissionDetailsVm
+@{
+    var s = Model.Submission;
+    ViewData["Title"] = s.PaintingTitle;
+    var canEval = User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Staff);
+    var e = s.Evaluation;
+}
+<div class="page-head">
+    <div>
+        <a asp-action="Index" class="back-link"><i class="bi bi-arrow-left"></i>All submissions</a>
+        <div class="d-flex flex-wrap gap-2 mb-2">@Html.Chip(s.Grade)@if (s.IsLateSubmission) { <span class="chip chip-danger">Late submission</span> }@if (Model.Award != null) { <span class="chip chip-gold"><i class="bi bi-award-fill"></i>@Model.Award.DisplayTitle</span> }</div>
+        <h1 class="page-title">@s.PaintingTitle</h1>
+        <p class="page-sub">by <a asp-controller="Students" asp-action="Details" asp-route-id="@s.StudentId">@s.Student.FullName</a> · <a asp-controller="Competitions" asp-action="Details" asp-route-id="@s.CompetitionId">@s.Competition.Title</a></p>
+    </div>
+    <div class="page-actions">
+        @if (canEval && !s.IsLateSubmission) { <a asp-action="Evaluate" asp-route-id="@s.SubmissionId" class="btn btn-primary"><i class="bi bi-clipboard-check me-1"></i>@(e == null ? "Evaluate" : "Update evaluation")</a> }
+        @if (canEval && s.Grade is SubmissionGrade.Best or SubmissionGrade.Better && Model.Award == null && s.Competition.Status == CompetitionStatus.Concluded)
+        { <a asp-controller="Awards" asp-action="Create" asp-route-submissionId="@s.SubmissionId" class="btn btn-soft"><i class="bi bi-award me-1"></i>Issue award</a> }
+        @if (s.Grade == SubmissionGrade.Best) { <a asp-controller="Listings" asp-action="Create" asp-route-submissionId="@s.SubmissionId" class="btn btn-soft"><i class="bi bi-building me-1"></i>Forward to exhibition</a> }
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7 d-grid gap-4 align-content-start">
+        <div class="frame"><a href="@s.ImageFilePath" target="_blank" rel="noopener"><img src="@s.ImageFilePath" alt="@s.PaintingTitle" /></a></div>
+        <div class="panel"><div class="panel-body">
+            <div class="d-flex justify-content-between"><h4>@s.TextType</h4></div>
+            <div class="quote-block @(s.TextType == "Poem" ? "poem" : "") pre">@s.AccompanyingText</div>
+            @if (!string.IsNullOrWhiteSpace(s.CreativeDescription)) { <h5 class="mt-4">Creative notes</h5><p class="text-muted mb-0">@s.CreativeDescription</p> }
+        </div></div>
+    </div>
+    <div class="col-lg-5 d-grid gap-4 align-content-start">
+        <div class="panel"><div class="panel-head"><h3>Evaluation</h3></div><div class="panel-body">
+            @if (e == null)
+            {
+                <div class="text-muted">@(s.IsLateSubmission ? "Submitted after the deadline — automatically disqualified." : "Not evaluated yet.")</div>
+            }
+            else
+            {
+                <div class="d-grid gap-3">
+                    <div class="d-flex justify-content-between align-items-center"><span class="text-muted small">Grade</span>@Html.Chip(e.Grade)</div>
+                    @if (!string.IsNullOrWhiteSpace(e.PositivePoints)) { <div class="feedback pos"><h6>Positive points</h6><p>@e.PositivePoints</p></div> }
+                    @if (!string.IsNullOrWhiteSpace(e.NegativePoints)) { <div class="feedback neg"><h6>Negative points</h6><p>@e.NegativePoints</p></div> }
+                    @if (!string.IsNullOrWhiteSpace(e.AreasOfImprovement)) { <div class="feedback imp"><h6>Areas of improvement</h6><p>@e.AreasOfImprovement</p></div> }
+                    @if (!string.IsNullOrWhiteSpace(e.GeneralRemarks)) { <div class="feedback gen"><h6>General remarks</h6><p>@e.GeneralRemarks</p></div> }
+                    <div class="row-sub">Evaluated by @(e.EvaluatedBy?.FullName ?? "—") on @Ui.DateTimeText(e.EvaluatedAt)</div>
+                </div>
+            }
+        </div></div>
+
+        <div class="panel"><div class="panel-head"><h3>File details</h3></div><div class="panel-body">
+            <dl class="kv mb-0">
+                <dt>Submitted</dt><dd>@Ui.DateTimeText(s.SubmittedAt)</dd>
+                @if (s.LastUpdatedAt != null) { <dt>Last edited</dt><dd>@Ui.DateTimeText(s.LastUpdatedAt)</dd> }
+                <dt>Original file</dt><dd>@s.OriginalFileName</dd>
+                <dt>Size</dt><dd>@Ui.FileSize(s.FileSizeInBytes)@(s.ImageWidth > 0 ? $" · {s.ImageWidth}×{s.ImageHeight}px" : "")</dd>
+                <dt>Deadline</dt><dd>@Ui.DateTimeText(s.Competition.EndDate)</dd>
+                <dt>Likes</dt><dd>@Model.Likes</dd>
+            </dl>
+        </div></div>
+
+        @if (Model.Listings.Count > 0)
+        {
+            <div class="panel"><div class="panel-head"><h3>Exhibitions</h3></div><div class="panel-body d-grid gap-2">
+                @foreach (var l in Model.Listings)
+                {
+                    <div class="d-flex justify-content-between align-items-center"><a asp-controller="Exhibitions" asp-action="Details" asp-route-id="@l.ExhibitionId" class="row-title">@l.Exhibition.ExhibitionName</a>@Html.Chip(l.SaleStatus)</div>
+                }
+            </div></div>
+        }
+    </div>
+</div>

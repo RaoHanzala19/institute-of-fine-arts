@@ -1,0 +1,50 @@
+@model PagedList<Student>
+@{
+    ViewData["Title"] = "Students";
+    var admin = User.IsInRole(Roles.Admin);
+    var active = (bool?)ViewBag.Active;
+}
+<div class="page-head">
+    <div><h1 class="page-title">Students</h1><p class="page-sub">Enrolled artists and their admission details.</p></div>
+    <div class="page-actions">
+        <a asp-action="Index" asp-route-export="true" asp-route-q="@ViewBag.Q" asp-route-course="@ViewBag.Course" asp-route-active="@active" class="btn btn-soft"><i class="bi bi-download me-1"></i>Export CSV</a>
+        @if (admin) { <a asp-action="Create" class="btn btn-primary"><i class="bi bi-person-plus me-1"></i>Enrol student</a> }
+    </div>
+</div>
+<form method="get" class="filters">
+    <div class="search"><i class="bi bi-search"></i><input type="search" name="q" value="@ViewBag.Q" class="form-control" placeholder="Search name, enrollment no or email…" data-debounce /></div>
+    <select name="course" class="form-select" data-autosubmit asp-items="ViewBag.Courses"><option value="">All courses</option></select>
+    <select name="active" class="form-select" data-autosubmit>
+        <option value="">Active &amp; inactive</option>
+        <option value="true" selected="@(active == true)">Active</option>
+        <option value="false" selected="@(active == false)">Inactive</option>
+    </select>
+    @if (!string.IsNullOrEmpty((string?)ViewBag.Q) || !string.IsNullOrEmpty((string?)ViewBag.Course) || active.HasValue) { <a asp-action="Index" class="btn btn-ghost btn-sm">Clear</a> }
+</form>
+@if (Model.Count == 0)
+{
+    <div class="panel"><div class="panel-body"><partial name="_Empty" model='("bi-mortarboard", "No students found", "Try changing the search or filters.")' /></div></div>
+}
+else
+{
+    <div class="panel panel-flush"><div class="table-responsive"><table class="table-x">
+        <thead><tr><th>Student</th><th>Enrollment</th><th>Course</th><th>Contact</th><th>Admitted</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var s in Model)
+        {
+            <tr>
+                <td><div class="d-flex align-items-center gap-3">@Html.Avatar(s.FullName)<div><a asp-action="Details" asp-route-id="@s.StudentId" class="row-title">@s.FullName</a><div class="row-sub">@s.ApplicationUser.Email</div></div></div></td>
+                <td class="mono">@s.EnrollmentNumber</td>
+                <td>@s.Course<div class="row-sub">@s.ClassName</div></td>
+                <td>@s.PhoneNumber</td>
+                <td class="row-sub">@Ui.Date(s.AdmissionDate)</td>
+                <td>@if (s.IsActive) { <span class="chip chip-success"><i class="chip-dot"></i>Active</span> } else { <span class="chip chip-neutral"><i class="chip-dot"></i>Inactive</span> }</td>
+                <td class="actions">
+                    <a asp-action="Details" asp-route-id="@s.StudentId" class="btn btn-sm btn-soft">View</a>
+                    @if (admin) { <a asp-action="Edit" asp-route-id="@s.StudentId" class="btn btn-sm btn-ghost"><i class="bi bi-pencil"></i></a> }
+                </td>
+            </tr>
+        }
+        </tbody></table></div></div>
+    <partial name="_Pager" model="(IPaged)Model" />
+}

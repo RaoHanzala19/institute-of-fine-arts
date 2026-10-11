@@ -1,0 +1,71 @@
+@model ManagerDashboardVm
+@{
+    ViewData["Title"] = "Dashboard";
+    var name = User.FindFirst("full_name")?.Value ?? "";
+}
+<div class="page-head">
+    <div><h1 class="page-title">Welcome, @name.Split(' ')[0]</h1><p class="page-sub">Programme, exhibitions and money at a glance.</p></div>
+    <div class="page-actions">
+        <a asp-controller="Announcements" asp-action="Create" class="btn btn-soft"><i class="bi bi-megaphone me-1"></i>Post announcement</a>
+        <a asp-controller="Exhibitions" asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New exhibition</a>
+    </div>
+</div>
+
+<div class="stat-grid">
+    <div class="stat"><span class="stat-icon success"><i class="bi bi-cash-coin"></i></span><div><div class="stat-value sm">@Ui.Money(Model.GrossSales)</div><div class="stat-label">Gross sales · @Model.PaintingsSold painting(s)</div></div></div>
+    <div class="stat"><span class="stat-icon brand"><i class="bi bi-percent"></i></span><div><div class="stat-value sm">@Ui.Money(Model.Commission)</div><div class="stat-label">Institute commission</div></div></div>
+    <a asp-controller="Listings" asp-action="Index" asp-route-payment="@PaymentStatus.Pending" class="stat"><span class="stat-icon warning"><i class="bi bi-wallet2"></i></span><div><div class="stat-value sm">@Ui.Money(Model.PayoutsDue)</div><div class="stat-label">Owed to students · @Model.PayoutsPendingCount payout(s)</div></div></a>
+    <a asp-controller="Students" asp-action="Index" class="stat"><span class="stat-icon indigo"><i class="bi bi-mortarboard"></i></span><div><div class="stat-value">@Model.Students</div><div class="stat-label">Students · @Model.Staff staff</div></div></a>
+    <a asp-controller="Competitions" asp-action="Index" class="stat"><span class="stat-icon gold"><i class="bi bi-trophy"></i></span><div><div class="stat-value">@Model.Competitions</div><div class="stat-label">Competitions · @Model.Submissions entries</div></div></a>
+    <a asp-controller="Exhibitions" asp-action="Index" class="stat"><span class="stat-icon info"><i class="bi bi-building"></i></span><div><div class="stat-value">@Model.Exhibitions</div><div class="stat-label">Exhibitions · @Model.Listings listings</div></div></a>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6"><div class="panel h-100"><div class="panel-head"><div><h3>Sales by exhibition</h3><div class="sub">Gross value of sold paintings</div></div></div>
+        <div class="panel-body"><div class="chart-box"><canvas data-chart="@Ui.ChartJson("bar", Model.SalesByExhibition, "Sales", Ui.Currency + " ")"></canvas></div></div></div></div>
+    <div class="col-lg-6"><div class="panel h-100"><div class="panel-head"><div><h3>Entries per competition</h3><div class="sub">Most recent six</div></div></div>
+        <div class="panel-body"><div class="chart-box"><canvas data-chart="@Ui.ChartJson("bar", Model.SubmissionsPerCompetition, "Entries")"></canvas></div></div></div></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="panel h-100">
+            <div class="panel-head"><h3>Recent sales</h3><a asp-controller="Reports" asp-action="Sales" class="btn btn-sm btn-soft">Sales report</a></div>
+            <div class="panel-flush">
+                @if (Model.RecentSales.Count == 0) { <partial name="_Empty" model='("bi-bag", "No sales yet", "Sold paintings will appear here.")' /> }
+                else
+                {
+                    <div class="table-responsive"><table class="table-x">
+                        <thead><tr><th>Painting</th><th>Exhibition</th><th class="num">Price</th><th>Payout</th></tr></thead>
+                        <tbody>
+                        @foreach (var l in Model.RecentSales)
+                        {
+                            <tr>
+                                <td><a asp-controller="Listings" asp-action="Sale" asp-route-id="@l.ExhibitionListingId" class="row-title">@l.Submission.PaintingTitle</a><div class="row-sub">@l.Submission.Student.FullName</div></td>
+                                <td>@l.Exhibition.ExhibitionName<div class="row-sub">@Ui.Date(l.DateSold)</div></td>
+                                <td class="num">@Ui.Money(l.FinalSalePrice)</td>
+                                <td>@Html.Chip(l.PaymentStatus)</td>
+                            </tr>
+                        }
+                        </tbody></table></div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5 d-grid gap-4 align-content-start">
+        <div class="panel">
+            <div class="panel-head"><h3>Upcoming &amp; running exhibitions</h3></div>
+            <div class="panel-body d-grid gap-3">
+                @if (Model.UpcomingExhibitions.Count == 0) { <div class="text-muted small">Nothing scheduled.</div> }
+                @foreach (var e in Model.UpcomingExhibitions)
+                {
+                    <a asp-controller="Exhibitions" asp-action="Details" asp-route-id="@e.ExhibitionId" class="d-flex justify-content-between gap-3 text-body">
+                        <div><div class="row-title">@e.ExhibitionName</div><div class="row-sub">@e.Venue, @e.City · @Ui.Date(e.ExhibitionStartDate)</div></div>
+                        @Html.Chip(e.Status)
+                    </a>
+                }
+            </div>
+        </div>
+        <partial name="_Announcements" model="Model.Announcements" />
+    </div>
+</div>

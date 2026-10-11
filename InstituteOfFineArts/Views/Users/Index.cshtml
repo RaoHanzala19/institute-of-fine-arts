@@ -1,0 +1,42 @@
+@model List<UserRow>
+@{
+    ViewData["Title"] = "Accounts";
+    var me = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    var role = (string?)ViewBag.Role;
+}
+<div class="page-head">
+    <div><h1 class="page-title">Accounts</h1><p class="page-sub">Every sign-in account in the system, across all roles.</p></div>
+    <div class="page-actions"><a asp-action="Create" class="btn btn-primary"><i class="bi bi-person-plus me-1"></i>New admin / manager</a></div>
+</div>
+<form method="get" class="filters">
+    <div class="search"><i class="bi bi-search"></i><input type="search" name="q" value="@ViewBag.Q" class="form-control" placeholder="Search name or email…" data-debounce /></div>
+    <select name="role" class="form-select" data-autosubmit>
+        <option value="">All roles</option>
+        @foreach (var r in Roles.All) { <option value="@r" selected="@(role == r)">@r</option> }
+    </select>
+    @if (!string.IsNullOrEmpty((string?)ViewBag.Q) || !string.IsNullOrEmpty(role)) { <a asp-action="Index" class="btn btn-ghost btn-sm">Clear</a> }
+</form>
+<div class="panel panel-flush"><div class="table-responsive"><table class="table-x">
+    <thead><tr><th>Account</th><th>Role</th><th>Last sign-in</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    @foreach (var r in Model)
+    {
+        <tr>
+            <td><div class="d-flex align-items-center gap-3">@Html.Avatar(r.User.FullName)<div><div class="row-title">@r.User.FullName</div><div class="row-sub">@r.User.Email</div></div></div></td>
+            <td>@Html.RoleChip(r.Role)</td>
+            <td class="row-sub">@(r.User.LastLoginAt.HasValue ? Ui.TimeAgo(r.User.LastLoginAt.Value) : "Never")</td>
+            <td>@if (r.User.IsActive) { <span class="chip chip-success"><i class="chip-dot"></i>Active</span> } else { <span class="chip chip-neutral"><i class="chip-dot"></i>Inactive</span> }</td>
+            <td class="actions">
+                @if (r.StudentId != null) { <a asp-controller="Students" asp-action="Details" asp-route-id="@r.StudentId" class="btn btn-sm btn-ghost">Profile</a> }
+                @if (r.StaffId != null) { <a asp-controller="StaffMembers" asp-action="Details" asp-route-id="@r.StaffId" class="btn btn-sm btn-ghost">Profile</a> }
+                <a asp-action="ResetPassword" asp-route-id="@r.User.Id" class="btn btn-sm btn-soft"><i class="bi bi-key"></i></a>
+                @if (r.User.Id != me)
+                {
+                    <form asp-action="ToggleActive" asp-route-id="@r.User.Id" method="post" class="d-inline">
+                        <button class="btn btn-sm @(r.User.IsActive ? "btn-danger-soft" : "btn-primary")" type="submit" data-confirm="@(r.User.IsActive ? "This account will be signed out and blocked from signing in." : "This account will be able to sign in again.")" data-confirm-title="@(r.User.IsActive ? "Deactivate account?" : "Reactivate account?")">@(r.User.IsActive ? "Deactivate" : "Activate")</button>
+                    </form>
+                }
+            </td>
+        </tr>
+    }
+    </tbody></table></div></div>

@@ -1,0 +1,220 @@
+@model HomeVm
+@{
+    ViewData["Title"] = "Home";
+    var authed = User.Identity?.IsAuthenticated == true;
+    string Artist(Student s) => authed ? s.FullName : $"{s.FirstName} {s.LastName[..1]}.";
+    var hero = Model.Paintings.Take(3).ToList();
+    var f = Model.Featured;
+}
+
+<section class="hero">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <span class="eyebrow">Institute of Fine Arts</span>
+                <h1>Where every <em>brushstroke</em> finds its gallery.</h1>
+                <p class="lead">Compete in themed painting contests, receive detailed feedback from your instructors, win awards — and see your best work exhibited and sold, with every payment tracked.</p>
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    @if (authed)
+                    {
+                        <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary btn-lg">Open my dashboard <i class="bi bi-arrow-right ms-1"></i></a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg">Sign in to the portal <i class="bi bi-arrow-right ms-1"></i></a>
+                    }
+                    <a asp-controller="Gallery" asp-action="Index" class="btn btn-soft btn-lg"><i class="bi bi-palette2 me-1"></i>Browse the gallery</a>
+                </div>
+                <div class="d-flex align-items-center gap-3 mt-4 small text-muted">
+                    <i class="bi bi-shield-check fs-5 text-success"></i>
+                    <span>Secure, role-based portal for students, instructors, managers and administrators.</span>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="hero-art">
+                    @for (var i = 0; i < 3; i++)
+                    {
+                        var cls = new[] { "a", "b", "c" }[i];
+                        <div class="pic @cls">
+                            @if (i < hero.Count) { <img src="@(hero[i].ThumbnailPath ?? hero[i].ImageFilePath)" alt="@hero[i].PaintingTitle" /> }
+                            else { <div class="ph"></div> }
+                        </div>
+                    }
+                    <div class="badge-float one"><i class="bi bi-trophy-fill"></i><div><strong class="d-block">@Model.Awards awards</strong><span class="text-muted">issued so far</span></div></div>
+                    <div class="badge-float two"><i class="bi bi-heart-fill"></i><div><strong class="d-block">Best of season</strong><span class="text-muted">chosen by our jury</span></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <div class="stat-strip">
+        <div><strong>@Model.Students</strong><span>Students</span></div>
+        <div><strong>@Model.Paintings_Count</strong><span>Paintings</span></div>
+        <div><strong>@Model.Competitions</strong><span>Competitions</span></div>
+        <div><strong>@Model.Awards</strong><span>Awards</span></div>
+        <div><strong>@Model.Exhibitions</strong><span>Exhibitions</span></div>
+    </div>
+</div>
+
+@if (f != null || Model.Upcoming.Count > 0 || Model.Announcements.Count > 0)
+{
+    <section class="section">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    @if (f != null)
+                    {
+                        <div class="panel panel-accent h-100">
+                            <div class="panel-body p-4 p-lg-5">
+                                <span class="chip chip-success mb-3"><i class="chip-dot"></i>Open now</span>
+                                <div class="eyebrow mb-2">@(f.Theme ?? "Competition")</div>
+                                <h2 class="section-title mt-0">@f.Title</h2>
+                                <p class="text-muted">@f.Description</p>
+                                <div class="d-flex flex-wrap gap-4 my-4">
+                                    <div><div class="stat-label m-0">Deadline</div><strong>@Ui.Date(f.EndDate)</strong></div>
+                                    <div><div class="stat-label m-0">Time left</div><strong class="countdown @(f.DaysLeft <= 3 ? "urgent" : "")"><i class="bi bi-hourglass-split"></i>@(f.DeadlinePassed ? "Deadline passed" : f.DaysLeft + " day" + (f.DaysLeft == 1 ? "" : "s"))</strong></div>
+                                    <div><div class="stat-label m-0">Prize pool</div><strong>@Ui.Money(f.CompetitionAwards.Sum(a => a.PrizeMoney ?? 0))</strong></div>
+                                </div>
+                                @foreach (var t in f.CompetitionAwards.OrderBy(a => a.Rank).Take(3))
+                                {
+                                    <div class="prize-row">
+                                        <span class="rank-badge r@(t.Rank)">@t.Rank</span>
+                                        <div class="flex-grow-1"><strong>@t.AwardTitle</strong><div class="row-sub">@t.AwardDescription</div></div>
+                                        <strong>@Ui.Money(t.PrizeMoney)</strong>
+                                    </div>
+                                }
+                                <div class="mt-4">
+                                    @if (authed && User.IsInRole(Roles.Student))
+                                    {
+                                        <a asp-controller="Student" asp-action="Upload" asp-route-competitionId="@f.CompetitionId" class="btn btn-primary">Upload my painting</a>
+                                    }
+                                    else if (!authed)
+                                    {
+                                        <a asp-controller="Account" asp-action="Login" class="btn btn-primary">Sign in to enter</a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="panel h-100"><div class="panel-body"><partial name="_Empty" model='("bi-trophy", "No competition is open right now", "Check back soon — new contests open every season.")' /></div></div>
+                    }
+                </div>
+                <div class="col-lg-5 d-grid gap-4 align-content-start">
+                    @if (Model.Announcements.Count > 0)
+                    {
+                        <div class="panel">
+                            <div class="panel-head"><h3><i class="bi bi-megaphone me-2 text-primary"></i>Announcements</h3></div>
+                            <div class="panel-body d-grid gap-3">
+                                @foreach (var a in Model.Announcements)
+                                {
+                                    <div><div class="fw-semibold">@if (a.IsPinned) { <i class="bi bi-pin-angle-fill text-primary me-1"></i> }@a.Title</div>
+                                        <div class="small text-muted">@a.Body</div></div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    @if (Model.Upcoming.Count > 0)
+                    {
+                        <div class="panel">
+                            <div class="panel-head"><h3><i class="bi bi-calendar-event me-2 text-primary"></i>Coming up</h3></div>
+                            <div class="panel-body d-grid gap-3">
+                                @foreach (var c in Model.Upcoming)
+                                {
+                                    <div class="d-flex gap-3 align-items-center">
+                                        <div class="text-center flex-none" style="min-width:52px"><div class="display-font fs-4 lh-1">@c.StartDate.Day</div><div class="small text-muted text-uppercase">@c.StartDate.ToString("MMM")</div></div>
+                                        <div><div class="fw-semibold">@c.Title</div><div class="row-sub">@c.Theme · deadline @Ui.Date(c.EndDate)</div></div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+<section class="section alt">
+    <div class="container">
+        <div class="text-center mx-auto mb-5" style="max-width:640px">
+            <span class="eyebrow">How it works</span>
+            <h2 class="section-title">From canvas to collector in four steps</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3"><div class="step"><div class="n">01</div><h4>Enrol &amp; sign in</h4><p>The office creates your account. Sign in to see the competitions open to you.</p></div></div>
+            <div class="col-md-6 col-lg-3"><div class="step"><div class="n">02</div><h4>Submit your painting</h4><p>Upload a JPEG with a poem, quotation, story or description before the deadline.</p></div></div>
+            <div class="col-md-6 col-lg-3"><div class="step"><div class="n">03</div><h4>Get evaluated</h4><p>Instructors grade every work and write what worked, what didn't and how to grow.</p></div></div>
+            <div class="col-md-6 col-lg-3"><div class="step"><div class="n">04</div><h4>Exhibit &amp; sell</h4><p>Best paintings go to exhibitions. Sales, commission and your payout are tracked openly.</p></div></div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+            <div><span class="eyebrow">The gallery</span><h2 class="section-title">Best paintings of the season</h2></div>
+            <a asp-controller="Gallery" asp-action="Index" class="btn btn-soft">See the full gallery <i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+        @if (Model.Paintings.Count == 0)
+        {
+            <div class="panel"><div class="panel-body"><partial name="_Empty" model='("bi-palette2", "The gallery is being hung", "Paintings graded “Best” appear here.")' /></div></div>
+        }
+        else
+        {
+            <div class="grid-cards">
+                @foreach (var p in Model.Paintings.Take(6))
+                {
+                    <partial name="_PaintingCard" model='new PaintingCardVm { S = p, Href = Url.Action("Details", "Gallery", new { id = p.SubmissionId })!, Artist = Artist(p.Student), Likes = p.Likes.Count, Anonymous = !authed }' />
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@if (Model.RecentAwards.Count > 0)
+{
+    <section class="section alt">
+        <div class="container">
+            <div class="text-center mx-auto mb-5" style="max-width:640px">
+                <span class="eyebrow">Hall of fame</span>
+                <h2 class="section-title">Recent award winners</h2>
+            </div>
+            <div class="row g-3">
+                @foreach (var a in Model.RecentAwards)
+                {
+                    <div class="col-md-6">
+                        <div class="winner-card">
+                            <img src="@(a.WinningSubmission.ThumbnailPath ?? a.WinningSubmission.ImageFilePath)" alt="@a.WinningSubmission.PaintingTitle" />
+                            <div class="flex-grow-1">
+                                <span class="chip chip-gold mb-1"><i class="bi bi-award-fill"></i>@a.DisplayTitle</span>
+                                <div class="fw-semibold">@Artist(a.Student)</div>
+                                <div class="row-sub">“@a.WinningSubmission.PaintingTitle” · @a.Competition.Title</div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+<section class="section">
+    <div class="container">
+        <div class="cta-band">
+            <div class="row align-items-center g-4 position-relative" style="z-index:1">
+                <div class="col-lg-8">
+                    <h2 class="section-title mt-0">Ready to show the world what you can paint?</h2>
+                    <p class="mb-0 opacity-75">Sign in with the account your institute created for you, or get in touch to find out about the next intake.</p>
+                </div>
+                <div class="col-lg-4 d-flex flex-wrap gap-2 justify-content-lg-end">
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg">Sign in</a>
+                    <a asp-controller="Home" asp-action="Contact" class="btn btn-lg" style="background:#ffffff1f;color:#fff">Contact us</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,36 @@
+@model ExhibitionFormVm
+@{
+    var isEdit = Model.ExhibitionId > 0;
+    ViewData["Title"] = isEdit ? "Edit exhibition" : "New exhibition";
+}
+<div class="page-head">
+    <div><a asp-action="@(isEdit ? "Details" : "Index")" asp-route-id="@(isEdit ? Model.ExhibitionId : null)" class="back-link"><i class="bi bi-arrow-left"></i>Back</a><h1 class="page-title">@ViewData["Title"]</h1></div>
+</div>
+<form method="post" novalidate>
+    <input type="hidden" asp-for="ExhibitionId" />
+    <div asp-validation-summary="ModelOnly" class="alert alert-soft-danger"></div>
+    <div class="form-section">
+        <div class="section-head"><span class="ico"><i class="bi bi-building"></i></span><div><h3>Exhibition</h3><p>Name, venue and story of the show.</p></div></div>
+        <div class="row g-3">
+            <div class="col-12"><label asp-for="ExhibitionName" class="form-label"></label><input asp-for="ExhibitionName" class="form-control" /><span asp-validation-for="ExhibitionName"></span></div>
+            <div class="col-md-6"><label asp-for="Venue" class="form-label"></label><input asp-for="Venue" class="form-control" /><span asp-validation-for="Venue"></span></div>
+            <div class="col-md-3"><label asp-for="City" class="form-label"></label><input asp-for="City" class="form-control" /><span asp-validation-for="City"></span></div>
+            <div class="col-md-3"><label asp-for="Country" class="form-label"></label><input asp-for="Country" class="form-control" /><span asp-validation-for="Country"></span></div>
+            <div class="col-12"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="3" maxlength="3000"></textarea></div>
+        </div>
+    </div>
+    <div class="form-section">
+        <div class="section-head"><span class="ico"><i class="bi bi-calendar-range"></i></span><div><h3>Dates &amp; terms</h3><p>Status follows the dates automatically unless you cancel the show.</p></div></div>
+        <div class="row g-3">
+            <div class="col-md-3"><label asp-for="ExhibitionStartDate" class="form-label"></label><input asp-for="ExhibitionStartDate" type="date" asp-format="{0:yyyy-MM-dd}" class="form-control" /><span asp-validation-for="ExhibitionStartDate"></span></div>
+            <div class="col-md-3"><label asp-for="ExhibitionEndDate" class="form-label"></label><input asp-for="ExhibitionEndDate" type="date" asp-format="{0:yyyy-MM-dd}" class="form-control" /><span asp-validation-for="ExhibitionEndDate"></span></div>
+            <div class="col-md-3"><label asp-for="Status" class="form-label"></label><select asp-for="Status" asp-items="Ui.EnumItems(Model.Status)" class="form-select"></select></div>
+            <div class="col-md-3"><label asp-for="CommissionPercent" class="form-label"></label><div class="input-group"><input asp-for="CommissionPercent" type="number" step="0.5" min="0" max="90" class="form-control" /><span class="input-group-text">%</span></div><span asp-validation-for="CommissionPercent"></span><div class="form-text">Kept by the institute on every sale.</div></div>
+            <div class="col-12"><label asp-for="AdditionalNotes" class="form-label"></label><textarea asp-for="AdditionalNotes" class="form-control" rows="2" maxlength="1000"></textarea></div>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary btn-lg" type="submit">@(isEdit ? "Save changes" : "Create exhibition")</button>
+        <a asp-action="@(isEdit ? "Details" : "Index")" asp-route-id="@(isEdit ? Model.ExhibitionId : null)" class="btn btn-soft btn-lg">Cancel</a>
+    </div>
+</form>

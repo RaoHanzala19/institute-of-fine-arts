@@ -1,0 +1,73 @@
+@{
+    ViewData["Title"] = "About";
+}
+<section class="hero" style="padding-bottom:2.5rem">
+    <div class="container">
+        <span class="eyebrow">About us</span>
+        <h1 style="max-width:16ch">A school built around the <em>finished</em> painting.</h1>
+        <p class="lead">The Institute of Fine Arts trains young painters — and then gives them somewhere to show, be judged fairly and be paid for their work.</p>
+    </div>
+</section>
+
+<section class="section pt-2">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4"><div class="panel h-100"><div class="panel-body p-4">
+                <div class="feature-ico"><i class="bi bi-palette2"></i></div>
+                <h3>Our mission</h3>
+                <p class="text-muted mb-0">Nurture creative talent through disciplined practice, honest critique and real-world exposure.</p>
+            </div></div></div>
+            <div class="col-md-4"><div class="panel h-100"><div class="panel-body p-4">
+                <div class="feature-ico"><i class="bi bi-trophy"></i></div>
+                <h3>Competitions</h3>
+                <p class="text-muted mb-0">Themed contests every season, each with clear rules, published prizes and a transparent grading scale from Normal to Best.</p>
+            </div></div></div>
+            <div class="col-md-4"><div class="panel h-100"><div class="panel-body p-4">
+                <div class="feature-ico"><i class="bi bi-building"></i></div>
+                <h3>Exhibitions</h3>
+                <p class="text-muted mb-0">Best-graded paintings are forwarded to partner galleries. When one sells, the student's share is tracked to the last rupee.</p>
+            </div></div></div>
+        </div>
+    </div>
+</section>
+
+<section class="section alt">
+    <div class="container">
+        <div class="row g-5 align-items-start">
+            <div class="col-lg-5">
+                <span class="eyebrow">How we grade</span>
+                <h2 class="section-title">A scale every student understands</h2>
+                <p class="section-lead">Each painting is evaluated by an instructor who records what works, what holds it back and how to improve.</p>
+            </div>
+            <div class="col-lg-7">
+                <div class="panel"><div class="panel-body d-grid gap-3">
+                    @foreach (var g in new[] { SubmissionGrade.Best, SubmissionGrade.Better, SubmissionGrade.Good, SubmissionGrade.Moderate, SubmissionGrade.Normal, SubmissionGrade.Disqualified })
+                    {
+                        var text = g switch
+                        {
+                            SubmissionGrade.Best => "Outstanding. Eligible for awards and for forwarding to exhibitions.",
+                            SubmissionGrade.Better => "Highly accomplished, with clear promise.",
+                            SubmissionGrade.Good => "Solid work with definite strengths.",
+                            SubmissionGrade.Moderate => "Reasonable effort with noticeable gaps.",
+                            SubmissionGrade.Normal => "Meets the brief; needs more development.",
+                            _ => "Entry breaks the rules — for example, it was submitted after the deadline."
+                        };
+                        <div class="d-flex gap-3 align-items-center"><div style="min-width:130px">@Html.Chip(g)</div><div class="text-muted small">@text</div></div>
+                    }
+                </div></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="text-center mx-auto mb-5" style="max-width:620px"><span class="eyebrow">Programmes</span><h2 class="section-title">What you can study</h2></div>
+        <div class="row g-3">
+            @foreach (var p in new[] { ("bi-brush", "Diploma in Fine Arts", "Two years of drawing, colour, composition and art history."), ("bi-easel2", "Bachelor of Visual Arts", "A four-year degree pathway with a studio thesis."), ("bi-droplet-half", "Certificate in Oil Painting", "Six intensive months of oil technique."), ("bi-pencil", "Diploma in Illustration", "Storytelling through line, colour and layout.") })
+            {
+                <div class="col-sm-6 col-lg-3"><div class="step"><div class="feature-ico"><i class="bi @p.Item1"></i></div><h4>@p.Item2</h4><p>@p.Item3</p></div></div>
+            }
+        </div>
+    </div>
+</section>

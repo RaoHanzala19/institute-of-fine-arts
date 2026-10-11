@@ -1,0 +1,5 @@
+@{
+    var bare = ViewData["Bare"] as bool? == true;
+    var portal = ViewData["IsPortal"] as bool? == true;
+    Layout = bare ? "_BareLayout" : portal ? "_PortalLayout" : "_PublicLayout";
+}

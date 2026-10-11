@@ -1,0 +1,30 @@
+@model List<CompetitionReportRow>
+@{
+    ViewData["Title"] = "Competition summary";
+}
+<div class="page-head">
+    <div><a asp-action="Index" class="back-link"><i class="bi bi-arrow-left"></i>Reports</a><h1 class="page-title">Competition summary</h1></div>
+    <div class="page-actions">
+        <a asp-action="Competitions" asp-route-export="true" class="btn btn-soft"><i class="bi bi-download me-1"></i>CSV</a>
+        <button class="btn btn-primary" type="button" data-print><i class="bi bi-printer me-1"></i>Print</button>
+    </div>
+</div>
+<div class="panel panel-flush"><div class="table-responsive"><table class="table-x">
+    <thead><tr><th>Competition</th><th>Status</th><th>Deadline</th><th class="num">Entries</th><th>Evaluated</th><th class="num">Best</th><th class="num">Disq.</th><th class="num">Awards</th><th class="num">Prize money</th></tr></thead>
+    <tbody>
+    @foreach (var r in Model)
+    {
+        var pct = r.Submissions == 0 ? 0 : r.Evaluated * 100 / r.Submissions;
+        <tr>
+            <td><a asp-controller="Competitions" asp-action="Details" asp-route-id="@r.Competition.CompetitionId" class="row-title">@r.Competition.Title</a><div class="row-sub">@r.Competition.Theme</div></td>
+            <td>@Html.Chip(r.Competition.Status)</td>
+            <td class="row-sub">@Ui.Date(r.Competition.EndDate)</td>
+            <td class="num">@r.Submissions</td>
+            <td style="min-width:130px"><div class="d-flex align-items-center gap-2"><div class="progress-x flex-grow-1"><span style="width:@pct%"></span></div><span class="small text-muted">@pct%</span></div></td>
+            <td class="num">@r.Best</td>
+            <td class="num">@r.Disqualified</td>
+            <td class="num">@r.Awards</td>
+            <td class="num">@Ui.Money(r.PrizeTotal)</td>
+        </tr>
+    }
+    </tbody></table></div></div>

@@ -1,0 +1,79 @@
+@model SubmissionFormVm
+@{
+    var isEdit = Model.SubmissionId > 0;
+    ViewData["Title"] = isEdit ? "Edit entry" : "Upload a painting";
+    var comps = (List<Competition>)ViewBag.Competitions;
+    var selected = comps.FirstOrDefault(c => c.CompetitionId == Model.CompetitionId) ?? comps.FirstOrDefault();
+    var late = selected?.DeadlinePassed == true;
+}
+<div class="page-head">
+    <div><a asp-action="@(isEdit ? "SubmissionDetails" : "Competitions")" asp-route-id="@(isEdit ? Model.SubmissionId : null)" class="back-link"><i class="bi bi-arrow-left"></i>Back</a>
+        <h1 class="page-title">@ViewData["Title"]</h1><p class="page-sub">JPEG only · max 10 MB · at least 300 × 300 px.</p></div>
+</div>
+
+<form method="post" enctype="multipart/form-data" novalidate>
+    <input type="hidden" asp-for="SubmissionId" />
+    <div asp-validation-summary="ModelOnly" class="alert alert-soft-danger"></div>
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="form-section" style="position:sticky;top:90px">
+                <div class="section-head"><span class="ico"><i class="bi bi-image"></i></span><div><h3>Your painting</h3><p>Drag a JPEG here or click to browse.</p></div></div>
+                <div data-dropzone class="dropzone">
+                    <div data-idle class="@(isEdit ? "d-none" : "")"><i class="bi bi-cloud-arrow-up"></i><div class="fw-semibold mt-2">Drop your JPEG here</div><div class="small text-muted">or click to choose a file</div></div>
+                    <div data-preview class="@(isEdit ? "" : "d-none")">@if (isEdit && !string.IsNullOrEmpty(Model.ExistingImagePath)) { <img src="@Model.ExistingImagePath" alt="Current painting" /><div class="small text-muted mt-2">Current image — choose a new file to replace it.</div> }</div>
+                    <input asp-for="PaintingFile" type="file" accept=".jpg,.jpeg,image/jpeg" class="d-none" />
+                </div>
+                <div class="text-danger mt-2" data-file-error></div>
+                <span asp-validation-for="PaintingFile" class="d-block mt-1"></span>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="form-section">
+                <div class="section-head"><span class="ico"><i class="bi bi-trophy"></i></span><div><h3>Competition</h3></div></div>
+                @if (isEdit)
+                {
+                    <input type="hidden" asp-for="CompetitionId" />
+                    <div class="fw-semibold">@selected?.Title</div><div class="row-sub">Deadline @Ui.DateTimeText(selected?.EndDate)</div>
+                }
+                else
+                {
+                    <select asp-for="CompetitionId" class="form-select" id="compSelect">
+                        @foreach (var c in comps) { <option value="@c.CompetitionId" data-late="@(c.DeadlinePassed ? "1" : "0")" data-deadline="@Ui.DateTimeText(c.EndDate)" selected="@(c.CompetitionId == Model.CompetitionId)">@c.Title — deadline @Ui.Date(c.EndDate)</option> }
+                    </select>
+                    <span asp-validation-for="CompetitionId"></span>
+                    <div class="alert alert-soft-danger mt-3 mb-0 @(late ? "" : "d-none")" id="lateBox">
+                        <div class="fw-semibold mb-1"><i class="bi bi-clock-history me-1"></i>The deadline has passed</div>
+                        <div class="form-check"><input asp-for="AcceptLate" class="form-check-input" /><label asp-for="AcceptLate" class="form-check-label small"></label></div>
+                        <span asp-validation-for="AcceptLate"></span>
+                    </div>
+                }
+            </div>
+
+            <div class="form-section">
+                <div class="section-head"><span class="ico"><i class="bi bi-vector-pen"></i></span><div><h3>About the painting</h3></div></div>
+                <div class="row g-3">
+                    <div class="col-md-8"><label asp-for="PaintingTitle" class="form-label"></label><input asp-for="PaintingTitle" class="form-control" /><span asp-validation-for="PaintingTitle"></span></div>
+                    <div class="col-md-4"><label asp-for="TextType" class="form-label"></label>
+                        <select asp-for="TextType" class="form-select">@foreach (var t in TextTypes.All) { <option value="@t" selected="@(Model.TextType == t)">@t</option> }</select></div>
+                    <div class="col-12"><label asp-for="AccompanyingText" class="form-label"></label><textarea asp-for="AccompanyingText" class="form-control" rows="5" maxlength="5000"></textarea><span asp-validation-for="AccompanyingText"></span></div>
+                    <div class="col-12"><label asp-for="CreativeDescription" class="form-label"></label><textarea asp-for="CreativeDescription" class="form-control" rows="3" maxlength="3000" placeholder="Medium, inspiration, technique… (optional)"></textarea></div>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary btn-lg" type="submit">@(isEdit ? "Save changes" : "Submit painting")</button>
+                <a asp-action="@(isEdit ? "SubmissionDetails" : "Competitions")" asp-route-id="@(isEdit ? Model.SubmissionId : null)" class="btn btn-soft btn-lg">Cancel</a>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        (function () {
+            var sel = document.getElementById('compSelect'), box = document.getElementById('lateBox');
+            if (!sel || !box) return;
+            var upd = function () { box.classList.toggle('d-none', sel.options[sel.selectedIndex].dataset.late !== '1'); };
+            sel.addEventListener('change', upd); upd();
+        })();
+    </script>
+}

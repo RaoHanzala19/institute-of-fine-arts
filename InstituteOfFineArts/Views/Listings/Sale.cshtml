@@ -1,0 +1,101 @@
+@model SaleVm
+@{
+    var l = (ExhibitionListing)ViewBag.Listing;
+    ViewData["Title"] = "Manage listing";
+    var pct = l.Exhibition.CommissionPercent;
+    var sold = l.SaleStatus == SaleStatus.Sold;
+}
+<div class="page-head">
+    <div>
+        <a asp-controller="Exhibitions" asp-action="Details" asp-route-id="@l.ExhibitionId" class="back-link"><i class="bi bi-arrow-left"></i>@l.Exhibition.ExhibitionName</a>
+        <h1 class="page-title">@l.Submission.PaintingTitle</h1>
+        <p class="page-sub">by @l.Submission.Student.FullName · asking @Ui.Money(l.StudentQuotedPrice) · listed by @(l.ForwardedBy?.FullName ?? "—")</p>
+    </div>
+    <div class="page-actions">
+        @if (sold) { <a asp-action="Receipt" asp-route-id="@l.ExhibitionListingId" class="btn btn-soft"><i class="bi bi-receipt me-1"></i>Receipt</a> }
+        @if (!sold)
+        {
+            <form asp-action="Delete" asp-route-id="@l.ExhibitionListingId" method="post" class="d-inline"><button class="btn btn-danger-soft" type="submit" data-confirm="The painting will be removed from this exhibition." data-confirm-title="Remove from exhibition?" data-confirm-ok="Remove"><i class="bi bi-x-lg me-1"></i>Remove</button></form>
+        }
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4"><div class="d-grid gap-3" style="position:sticky;top:90px">
+        <div class="frame"><img src="@l.Submission.ImageFilePath" alt="" /></div>
+        <div class="panel"><div class="panel-body">
+            <h5>Money summary</h5>
+            <dl class="kv mb-0" id="money">
+                <dt>Commission</dt><dd>@pct.ToString("0.#")%</dd>
+                <dt>Sale price</dt><dd id="mPrice">@Ui.Money(l.FinalSalePrice)</dd>
+                <dt>Institute keeps</dt><dd id="mComm">@Ui.Money(l.CommissionAmount, true)</dd>
+                <dt>Student receives</dt><dd id="mNet"><strong>@Ui.Money(l.NetPayableToStudent, true)</strong></dd>
+                <dt>Paid so far</dt><dd>@Ui.Money(l.AmountPaidToStudent, true)</dd>
+                <dt>Balance due</dt><dd>@Ui.Money(l.BalanceDue, true)</dd>
+            </dl>
+        </div></div>
+    </div></div>
+
+    <div class="col-lg-8">
+        <form asp-action="Sale" asp-route-id="@l.ExhibitionListingId" method="post" novalidate id="saleForm" data-pct="@pct">
+            <input type="hidden" asp-for="ExhibitionListingId" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-soft-danger"></div>
+
+            <div class="form-section">
+                <div class="section-head"><span class="ico"><i class="bi bi-tag"></i></span><div><h3>Sale status</h3><p>Mark the painting sold once a buyer has paid.</p></div></div>
+                <div class="row g-3">
+                    <div class="col-md-4"><label asp-for="SaleStatus" class="form-label"></label><select asp-for="SaleStatus" asp-items="Ui.EnumItems(Model.SaleStatus)" class="form-select" id="saleStatus"></select></div>
+                    <div class="col-md-8"><label asp-for="Notes" class="form-label"></label><input asp-for="Notes" class="form-control" /></div>
+                </div>
+            </div>
+
+            <div id="soldSection">
+                <div class="form-section">
+                    <div class="section-head"><span class="ico"><i class="bi bi-person-check"></i></span><div><h3>Buyer &amp; price</h3><p>Shown on the receipt.</p></div></div>
+                    <div class="row g-3">
+                        <div class="col-md-4"><label asp-for="FinalSalePrice" class="form-label"></label><div class="input-group"><span class="input-group-text">@Ui.Currency</span><input asp-for="FinalSalePrice" type="number" step="0.01" min="0" class="form-control" id="finalPrice" /></div><span asp-validation-for="FinalSalePrice"></span></div>
+                        <div class="col-md-4"><label asp-for="DateSold" class="form-label"></label><input asp-for="DateSold" type="date" asp-format="{0:yyyy-MM-dd}" class="form-control" /><span asp-validation-for="DateSold"></span></div>
+                        <div class="col-md-4"><label asp-for="BuyerName" class="form-label"></label><input asp-for="BuyerName" class="form-control" /><span asp-validation-for="BuyerName"></span></div>
+                        <div class="col-md-4"><label asp-for="BuyerPhone" class="form-label"></label><input asp-for="BuyerPhone" class="form-control" /><span asp-validation-for="BuyerPhone"></span></div>
+                        <div class="col-md-4"><label asp-for="BuyerEmail" class="form-label"></label><input asp-for="BuyerEmail" class="form-control" /><span asp-validation-for="BuyerEmail"></span></div>
+                        <div class="col-md-4"><label asp-for="BuyerAddress" class="form-label"></label><input asp-for="BuyerAddress" class="form-control" /></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-head"><span class="ico"><i class="bi bi-wallet2"></i></span><div><h3>Payout to student</h3><p>Record the transfer once the student has been paid.</p></div></div>
+                    <div class="row g-3">
+                        <div class="col-md-4"><label asp-for="PaymentStatus" class="form-label"></label><select asp-for="PaymentStatus" asp-items="Ui.EnumItems(Model.PaymentStatus, PaymentStatus.NotApplicable)" class="form-select"></select></div>
+                        <div class="col-md-4"><label asp-for="AmountPaidToStudent" class="form-label"></label><div class="input-group"><span class="input-group-text">@Ui.Currency</span><input asp-for="AmountPaidToStudent" type="number" step="0.01" min="0" class="form-control" /></div><span asp-validation-for="AmountPaidToStudent"></span></div>
+                        <div class="col-md-4"><label asp-for="PaymentDate" class="form-label"></label><input asp-for="PaymentDate" type="date" asp-format="{0:yyyy-MM-dd}" class="form-control" /><span asp-validation-for="PaymentDate"></span></div>
+                        <div class="col-12"><label asp-for="PaymentRemarks" class="form-label"></label><input asp-for="PaymentRemarks" class="form-control" placeholder="Bank transfer ref, cheque no…" /></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary btn-lg" type="submit">Save</button>
+                <a asp-controller="Exhibitions" asp-action="Details" asp-route-id="@l.ExhibitionId" class="btn btn-soft btn-lg">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var form = document.getElementById('saleForm'), status = document.getElementById('saleStatus'),
+                section = document.getElementById('soldSection'), price = document.getElementById('finalPrice'),
+                pct = parseFloat(form.dataset.pct) || 0, cur = '@Ui.Currency ';
+            var fmt = function (n) { return cur + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+            var refresh = function () {
+                section.style.display = status.value === 'Sold' ? '' : 'none';
+                var p = parseFloat(price.value) || 0, c = Math.round(p * pct) / 100;
+                document.getElementById('mPrice').textContent = p ? fmt(p) : '—';
+                document.getElementById('mComm').textContent = p ? fmt(c) : '—';
+                document.getElementById('mNet').innerHTML = p ? '<strong>' + fmt(p - c) + '</strong>' : '—';
+            };
+            status.addEventListener('change', refresh); price.addEventListener('input', refresh); refresh();
+        })();
+    </script>
+}

@@ -1,0 +1,33 @@
+@model IPaged
+@if (Model.TotalCount > 0)
+{
+    string Link(int page)
+    {
+        var q = Context.Request.Query
+            .Where(kv => !string.Equals(kv.Key, "page", StringComparison.OrdinalIgnoreCase) && !string.Equals(kv.Key, "export", StringComparison.OrdinalIgnoreCase))
+            .SelectMany(kv => kv.Value.Select(v => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(v ?? "")}"))
+            .Append($"page={page}");
+        return Context.Request.Path + "?" + string.Join("&", q);
+    }
+    var from = (Model.PageIndex - 1) * Model.PageSize + 1;
+    var to = Math.Min(Model.PageIndex * Model.PageSize, Model.TotalCount);
+    var start = Math.Max(1, Model.PageIndex - 2);
+    var end = Math.Min(Model.TotalPages, start + 4);
+    start = Math.Max(1, end - 4);
+
+    <div class="pager no-print">
+        <div>Showing <strong>@from–@to</strong> of <strong>@Model.TotalCount</strong></div>
+        @if (Model.TotalPages > 1)
+        {
+            <div class="pages">
+                <a href="@Link(Model.PageIndex - 1)" class="@(Model.HasPrevious ? "" : "disabled")" aria-label="Previous"><i class="bi bi-chevron-left"></i></a>
+                @for (var i = start; i <= end; i++)
+                {
+                    if (i == Model.PageIndex) { <span class="cur">@i</span> }
+                    else { <a href="@Link(i)">@i</a> }
+                }
+                <a href="@Link(Model.PageIndex + 1)" class="@(Model.HasNext ? "" : "disabled")" aria-label="Next"><i class="bi bi-chevron-right"></i></a>
+            </div>
+        }
+    </div>
+}

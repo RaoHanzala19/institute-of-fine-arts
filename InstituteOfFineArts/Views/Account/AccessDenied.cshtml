@@ -1,0 +1,14 @@
+@{
+    ViewData["Title"] = "Access denied";
+}
+<div class="status-page">
+    <div>
+        <div class="code">403</div>
+        <h2 class="mb-2">This room is members only.</h2>
+        <p class="text-muted mb-4">Your account doesn't have permission to open that page.</p>
+        <div class="d-flex gap-2 justify-content-center">
+            <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary">Go to my dashboard</a>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-soft">Home</a>
+        </div>
+    </div>
+</div>

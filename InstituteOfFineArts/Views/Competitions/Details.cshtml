@@ -1,0 +1,106 @@
+@model CompetitionDetailsVm
+@{
+    var c = Model.Competition;
+    ViewData["Title"] = c.Title;
+    var canEdit = User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Staff);
+    var total = Model.Submissions.Count;
+    var evaluated = Model.Submissions.Count(s => s.Grade != SubmissionGrade.Pending);
+    var pct = total == 0 ? 0 : evaluated * 100 / total;
+}
+<div class="page-head">
+    <div>
+        <a asp-action="Index" class="back-link"><i class="bi bi-arrow-left"></i>All competitions</a>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">@Html.Chip(c.Status)@if (c.Theme != null) { <span class="chip chip-brand">@c.Theme</span> }</div>
+        <h1 class="page-title">@c.Title</h1>
+        <p class="page-sub">@Ui.Date(c.StartDate) → @Ui.DateTimeText(c.EndDate)@(c.CreatedBy != null ? " · created by " + c.CreatedBy.FullName : "")</p>
+    </div>
+    <div class="page-actions">
+        <a asp-controller="Submissions" asp-action="Index" asp-route-competitionId="@c.CompetitionId" class="btn btn-soft"><i class="bi bi-images me-1"></i>Submissions</a>
+        @if (canEdit)
+        {
+            <a asp-action="Edit" asp-route-id="@c.CompetitionId" class="btn btn-soft"><i class="bi bi-pencil me-1"></i>Edit</a>
+            @if (c.Status == CompetitionStatus.Concluded)
+            {
+                <a asp-controller="Awards" asp-action="Create" asp-route-competitionId="@c.CompetitionId" class="btn btn-primary"><i class="bi bi-award me-1"></i>Issue award</a>
+            }
+            else
+            {
+                <form asp-action="Conclude" asp-route-id="@c.CompetitionId" method="post" class="d-inline">
+                    <button class="btn btn-primary" type="submit" data-confirm="Concluding closes the competition to new entries and lets you issue awards. Students who entered will be notified." data-confirm-title="Conclude “@c.Title”?" data-confirm-ok="Conclude"><i class="bi bi-flag me-1"></i>Conclude</button>
+                </form>
+            }
+            @if (total == 0)
+            {
+                <form asp-action="Delete" asp-route-id="@c.CompetitionId" method="post" class="d-inline">
+                    <button class="btn btn-danger-soft btn-icon" type="submit" title="Delete" data-confirm="This competition has no entries and will be deleted permanently." data-confirm-title="Delete competition?" data-confirm-ok="Delete"><i class="bi bi-trash"></i></button>
+                </form>
+            }
+        }
+    </div>
+</div>
+
+@if (c.Status != CompetitionStatus.Concluded && c.DeadlinePassed)
+{
+    <div class="alert alert-soft-warning"><i class="bi bi-exclamation-triangle me-2"></i>The deadline has passed. Late uploads are automatically disqualified. Finish evaluating and conclude the competition to issue awards.</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-8 d-grid gap-4 align-content-start">
+        <div class="panel"><div class="panel-body">
+            <h4>About this competition</h4>
+            <p class="text-muted pre">@(c.Description ?? "No description provided.")</p>
+            @if (!string.IsNullOrWhiteSpace(c.Conditions))
+            {
+                <h5 class="mt-4">Rules &amp; conditions</h5>
+                <p class="text-muted pre mb-0">@c.Conditions</p>
+            }
+        </div></div>
+
+        <div class="panel">
+            <div class="panel-head"><h3>Entries <span class="text-muted fs-6">(@total)</span></h3>
+                <div class="d-flex align-items-center gap-2" style="min-width:180px"><div class="progress-x flex-grow-1"><span style="width:@pct%"></span></div><span class="small text-muted">@pct% evaluated</span></div></div>
+            <div class="panel-flush">
+                @if (total == 0) { <partial name="_Empty" model='("bi-image", "No entries yet", "Paintings students submit will appear here.")' /> }
+                else
+                {
+                    <div class="table-responsive"><table class="table-x">
+                        <thead><tr><th></th><th>Painting</th><th>Student</th><th>Submitted</th><th>Grade</th></tr></thead>
+                        <tbody>
+                        @foreach (var s in Model.Submissions)
+                        {
+                            <tr>
+                                <td style="width:1%"><img class="thumb-sm" src="@(s.ThumbnailPath ?? s.ImageFilePath)" alt="" /></td>
+                                <td><a asp-controller="Submissions" asp-action="Details" asp-route-id="@s.SubmissionId" class="row-title">@s.PaintingTitle</a></td>
+                                <td>@s.Student.FullName</td>
+                                <td class="row-sub">@Ui.DateTimeText(s.SubmittedAt)@(s.IsLateSubmission ? " · late" : "")</td>
+                                <td>@Html.Chip(s.Grade)</td>
+                            </tr>
+                        }
+                        </tbody></table></div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 d-grid gap-4 align-content-start">
+        <div class="panel">
+            <div class="panel-head"><h3>Prize tiers</h3></div>
+            <div class="panel-body">
+                @if (Model.Tiers.Count == 0) { <div class="text-muted small">No award tiers defined.</div> }
+                @foreach (var t in Model.Tiers)
+                {
+                    var winner = Model.Awards.FirstOrDefault(a => a.CompetitionAwardId == t.CompetitionAwardId);
+                    <div class="prize-row">
+                        <span class="rank-badge r@(t.Rank)">@t.Rank</span>
+                        <div class="flex-grow-1">
+                            <strong>@t.AwardTitle</strong>
+                            <div class="row-sub">@(winner != null ? "Won by " + winner.Student.FullName : (t.AwardDescription ?? "Not yet awarded"))</div>
+                        </div>
+                        <strong>@Ui.Money(t.PrizeMoney)</strong>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="panel"><div class="panel-head"><h3>Grades</h3></div><div class="panel-body"><div class="chart-box sm"><canvas data-chart="@Ui.ChartJson("doughnut", Model.GradeMix)"></canvas></div></div></div>
+    </div>
+</div>

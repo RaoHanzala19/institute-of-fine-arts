@@ -1,0 +1,61 @@
+@model Submission
+@{
+    ViewData["Title"] = Model.PaintingTitle;
+    var authed = User.Identity?.IsAuthenticated == true;
+    var hasLiked = (bool)ViewBag.HasLiked;
+    var award = ViewBag.Award as Award;
+    var more = (List<Submission>)ViewBag.More;
+    var artist = authed ? Model.Student.FullName : $"{Model.Student.FirstName} {Model.Student.LastName[..1]}.";
+}
+<section class="section pt-4">
+    <div class="container">
+        <a asp-action="Index" class="back-link"><i class="bi bi-arrow-left"></i>Back to the gallery</a>
+        <div class="row g-5">
+            <div class="col-lg-7">
+                <div class="frame"><img src="@Model.ImageFilePath" alt="@Model.PaintingTitle" /></div>
+            </div>
+            <div class="col-lg-5">
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    @Html.Chip(Model.Grade)
+                    @if (award != null) { <span class="chip chip-gold"><i class="bi bi-award-fill"></i>@award.DisplayTitle</span> }
+                </div>
+                <h1 class="mb-1" style="font-size:2.4rem">@Model.PaintingTitle</h1>
+                <div class="text-muted mb-4">by <strong class="text-body">@artist</strong> · @Model.Competition.Title</div>
+
+                <div class="d-flex gap-2 mb-4">
+                    <button type="button" class="btn @(hasLiked ? "btn-primary" : "btn-soft") js-like like-inline" data-id="@Model.SubmissionId" @(authed ? "" : "data-anon=1")>
+                        <i class="bi @(hasLiked ? "bi-heart-fill" : "bi-heart") me-1"></i><span class="count">@Model.Likes.Count</span> likes
+                    </button>
+                </div>
+
+                <div class="quote-block @(Model.TextType == "Poem" ? "poem" : "") pre">@Model.AccompanyingText</div>
+                <div class="small text-muted mt-2">@Model.TextType</div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.CreativeDescription))
+                {
+                    <h5 class="mt-4">The artist's notes</h5>
+                    <p class="text-muted">@Model.CreativeDescription</p>
+                }
+                @if (Model.Evaluation?.PositivePoints is { Length: > 0 } pos)
+                {
+                    <div class="feedback pos mt-4"><h6><i class="bi bi-hand-thumbs-up me-1"></i>What the jury liked</h6><p>@pos</p></div>
+                }
+                <dl class="kv mt-4">
+                    <dt>Submitted</dt><dd>@Ui.Date(Model.SubmittedAt)</dd>
+                    <dt>Dimensions</dt><dd>@Model.ImageWidth × @Model.ImageHeight px</dd>
+                </dl>
+            </div>
+        </div>
+
+        @if (more.Count > 0)
+        {
+            <h3 class="mt-5 mb-3">More from this competition</h3>
+            <div class="grid-cards">
+                @foreach (var p in more)
+                {
+                    <partial name="_PaintingCard" model='new PaintingCardVm { S = p, Href = Url.Action("Details", new { id = p.SubmissionId })!, Artist = authed ? p.Student.FullName : p.Student.FirstName + " " + p.Student.LastName[..1] + ".", ShowLike = false }' />
+                }
+            </div>
+        }
+    </div>
+</section>

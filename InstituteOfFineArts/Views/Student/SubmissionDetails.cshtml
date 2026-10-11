@@ -1,0 +1,74 @@
+@model SubmissionDetailsVm
+@{
+    var s = Model.Submission;
+    ViewData["Title"] = s.PaintingTitle;
+    var e = s.Evaluation;
+    var editable = !s.Competition.DeadlinePassed && s.Competition.Status != CompetitionStatus.Concluded;
+}
+<div class="page-head">
+    <div>
+        <a asp-action="Submissions" class="back-link"><i class="bi bi-arrow-left"></i>My submissions</a>
+        <div class="d-flex flex-wrap gap-2 mb-2">@Html.Chip(s.Grade)@if (s.IsLateSubmission) { <span class="chip chip-danger">Late submission</span> }@if (Model.Award != null) { <span class="chip chip-gold"><i class="bi bi-award-fill"></i>@Model.Award.DisplayTitle</span> }</div>
+        <h1 class="page-title">@s.PaintingTitle</h1>
+        <p class="page-sub">@s.Competition.Title · submitted @Ui.DateTimeText(s.SubmittedAt)</p>
+    </div>
+    <div class="page-actions">
+        @if (Model.Award != null) { <a asp-controller="Certificates" asp-action="Certificate" asp-route-id="@Model.Award.AwardId" class="btn btn-primary"><i class="bi bi-award me-1"></i>Certificate</a> }
+        @if (editable)
+        {
+            <a asp-action="Edit" asp-route-id="@s.SubmissionId" class="btn btn-soft"><i class="bi bi-pencil me-1"></i>Edit</a>
+            <form asp-action="Delete" asp-route-id="@s.SubmissionId" method="post" class="d-inline"><button class="btn btn-danger-soft" type="submit" data-confirm="Your painting will be withdrawn and its files deleted. You can enter again before the deadline." data-confirm-title="Withdraw this entry?" data-confirm-ok="Withdraw"><i class="bi bi-trash me-1"></i>Withdraw</button></form>
+        }
+    </div>
+</div>
+
+@if (s.IsLateSubmission)
+{
+    <div class="alert alert-soft-danger"><i class="bi bi-clock-history me-2"></i>This entry was uploaded after the deadline and is disqualified under the competition rules.</div>
+}
+else if (editable)
+{
+    <div class="alert alert-soft-info"><i class="bi bi-info-circle me-2"></i>You can edit or withdraw this entry until <strong>@Ui.DateTimeText(s.Competition.EndDate)</strong>.</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-7 d-grid gap-4 align-content-start">
+        <div class="frame"><a href="@s.ImageFilePath" target="_blank" rel="noopener"><img src="@s.ImageFilePath" alt="@s.PaintingTitle" /></a></div>
+        <div class="panel"><div class="panel-body">
+            <h4>@s.TextType</h4>
+            <div class="quote-block @(s.TextType == "Poem" ? "poem" : "") pre">@s.AccompanyingText</div>
+            @if (!string.IsNullOrWhiteSpace(s.CreativeDescription)) { <h5 class="mt-4">My notes</h5><p class="text-muted mb-0">@s.CreativeDescription</p> }
+        </div></div>
+    </div>
+    <div class="col-lg-5 d-grid gap-4 align-content-start">
+        <div class="panel"><div class="panel-head"><h3>Feedback</h3></div><div class="panel-body">
+            @if (e == null)
+            {
+                <div class="text-center text-muted py-3"><i class="bi bi-hourglass-split fs-2 d-block mb-2" style="color:var(--brand)"></i>Your painting is waiting to be evaluated. You'll be notified when feedback is ready.</div>
+            }
+            else
+            {
+                <div class="d-grid gap-3">
+                    <div class="d-flex justify-content-between align-items-center"><span class="text-muted small">Final grade</span>@Html.Chip(e.Grade)</div>
+                    @if (!string.IsNullOrWhiteSpace(e.PositivePoints)) { <div class="feedback pos"><h6><i class="bi bi-hand-thumbs-up me-1"></i>What works well</h6><p>@e.PositivePoints</p></div> }
+                    @if (!string.IsNullOrWhiteSpace(e.NegativePoints)) { <div class="feedback neg"><h6><i class="bi bi-hand-thumbs-down me-1"></i>What holds it back</h6><p>@e.NegativePoints</p></div> }
+                    @if (!string.IsNullOrWhiteSpace(e.AreasOfImprovement)) { <div class="feedback imp"><h6><i class="bi bi-lightbulb me-1"></i>Areas of improvement</h6><p>@e.AreasOfImprovement</p></div> }
+                    @if (!string.IsNullOrWhiteSpace(e.GeneralRemarks)) { <div class="feedback gen"><h6><i class="bi bi-chat-quote me-1"></i>General remarks</h6><p>@e.GeneralRemarks</p></div> }
+                    <div class="row-sub">Evaluated by @(e.EvaluatedBy?.FullName ?? "your instructor") · @Ui.DateTimeText(e.EvaluatedAt)</div>
+                </div>
+            }
+        </div></div>
+        <div class="panel"><div class="panel-body"><dl class="kv mb-0">
+            <dt>Likes</dt><dd>@Model.Likes</dd>
+            <dt>File</dt><dd>@s.OriginalFileName</dd>
+            <dt>Size</dt><dd>@Ui.FileSize(s.FileSizeInBytes)@(s.ImageWidth > 0 ? $" · {s.ImageWidth}×{s.ImageHeight}px" : "")</dd>
+            @if (s.LastUpdatedAt != null) { <dt>Last edited</dt><dd>@Ui.DateTimeText(s.LastUpdatedAt)</dd> }
+        </dl></div></div>
+        @if (Model.Listings.Count > 0)
+        {
+            <div class="panel"><div class="panel-head"><h3>Exhibitions</h3><a asp-action="Exhibitions" class="btn btn-sm btn-soft">Details</a></div><div class="panel-body d-grid gap-2">
+                @foreach (var l in Model.Listings) { <div class="d-flex justify-content-between"><span>@l.Exhibition.ExhibitionName</span>@Html.Chip(l.SaleStatus)</div> }
+            </div></div>
+        }
+    </div>
+</div>

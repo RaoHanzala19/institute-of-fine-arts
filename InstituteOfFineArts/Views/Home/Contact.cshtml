@@ -1,0 +1,48 @@
+@model ContactVm
+@{
+    ViewData["Title"] = "Contact";
+    var inst = Inst.Value;
+}
+<section class="hero" style="padding-bottom:2rem">
+    <div class="container">
+        <span class="eyebrow">Contact</span>
+        <h1 style="max-width:14ch">Let's <em>talk</em> art.</h1>
+        <p class="lead">Admissions, commissions, partnerships or press — write to us and the front desk will reply by email.</p>
+    </div>
+</section>
+<section class="section pt-2">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="panel"><div class="panel-body p-4">
+                    <form asp-action="Contact" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-soft-danger"></div>
+                        <div class="row g-3">
+                            <div class="col-md-6"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" autocomplete="name" /><span asp-validation-for="Name"></span></div>
+                            <div class="col-md-6"><label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control" autocomplete="email" /><span asp-validation-for="Email"></span></div>
+                            <div class="col-12"><label asp-for="Subject" class="form-label"></label><input asp-for="Subject" class="form-control" /><span asp-validation-for="Subject"></span></div>
+                            <div class="col-12"><label asp-for="Message" class="form-label"></label><textarea asp-for="Message" class="form-control" rows="6" maxlength="3000"></textarea><span asp-validation-for="Message"></span></div>
+                        </div>
+                        <button class="btn btn-primary mt-4" type="submit"><i class="bi bi-send me-1"></i>Send message</button>
+                    </form>
+                </div></div>
+            </div>
+            <div class="col-lg-5 d-grid gap-3 align-content-start">
+                <div class="panel"><div class="panel-body p-4 d-grid gap-3">
+                    <div class="d-flex gap-3"><div class="feature-ico m-0"><i class="bi bi-geo-alt"></i></div><div><strong>Visit</strong><div class="text-muted">@inst.Address</div></div></div>
+                    <div class="d-flex gap-3"><div class="feature-ico m-0"><i class="bi bi-telephone"></i></div><div><strong>Call</strong><div class="text-muted">@inst.Phone</div></div></div>
+                    <div class="d-flex gap-3"><div class="feature-ico m-0"><i class="bi bi-envelope"></i></div><div><strong>Email</strong><div class="text-muted">@inst.Email</div></div></div>
+                </div></div>
+                <div class="panel"><div class="panel-body p-4">
+                    <strong>Opening hours</strong>
+                    <table class="table-x mt-2"><tbody>
+                        <tr><td>Mon – Thu</td><td class="num">9 am – 9 pm</td></tr>
+                        <tr><td>Fri</td><td class="num">9 am – 1 pm</td></tr>
+                        <tr><td>Sat</td><td class="num">10 am – 4 pm</td></tr>
+                        <tr><td>Sun</td><td class="num">Closed</td></tr>
+                    </tbody></table>
+                </div></div>
+            </div>
+        </div>
+    </div>
+</section>

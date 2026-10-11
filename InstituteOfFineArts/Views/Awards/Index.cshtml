@@ -1,0 +1,41 @@
+@model PagedList<Award>
+@{
+    ViewData["Title"] = "Awards";
+    var canEdit = User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Staff);
+}
+<div class="page-head">
+    <div><h1 class="page-title">Awards</h1><p class="page-sub">Prizes issued to winning paintings, each with a printable certificate.</p></div>
+    <div class="page-actions">
+        <a asp-action="Index" asp-route-export="true" asp-route-q="@ViewBag.Q" asp-route-competitionId="@ViewBag.CompetitionId" class="btn btn-soft"><i class="bi bi-download me-1"></i>Export CSV</a>
+        @if (canEdit) { <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Issue award</a> }
+    </div>
+</div>
+<form method="get" class="filters">
+    <div class="search"><i class="bi bi-search"></i><input type="search" name="q" value="@ViewBag.Q" class="form-control" placeholder="Search student, competition or certificate no…" data-debounce /></div>
+    <select name="competitionId" class="form-select" data-autosubmit asp-items="ViewBag.Competitions"><option value="">All competitions</option></select>
+    @if (!string.IsNullOrEmpty((string?)ViewBag.Q) || ViewBag.CompetitionId != null) { <a asp-action="Index" class="btn btn-ghost btn-sm">Clear</a> }
+</form>
+
+@if (Model.Count == 0)
+{
+    <div class="panel"><div class="panel-body"><partial name="_Empty" model='("bi-award", "No awards issued yet", "Conclude a competition, then issue awards to the winners.")' /></div></div>
+}
+else
+{
+    <div class="grid-cards wide">
+        @foreach (var a in Model)
+        {
+            <div class="winner-card">
+                <img src="@(a.WinningSubmission.ThumbnailPath ?? a.WinningSubmission.ImageFilePath)" alt="" />
+                <div class="flex-grow-1 min-w-0">
+                    <span class="chip chip-gold mb-1"><i class="bi bi-award-fill"></i>@a.DisplayTitle</span>
+                    <div class="fw-semibold"><a asp-action="Details" asp-route-id="@a.AwardId" class="text-reset stretched-link">@a.Student.FullName</a></div>
+                    <div class="row-sub">@a.Competition.Title</div>
+                    <div class="row-sub mono">@a.CertificateNumber · @Ui.Date(a.DateIssued)</div>
+                </div>
+                @if (a.CompetitionAward?.PrizeMoney != null) { <strong class="flex-none">@Ui.Money(a.CompetitionAward.PrizeMoney)</strong> }
+            </div>
+        }
+    </div>
+    <partial name="_Pager" model="(IPaged)Model" />
+}

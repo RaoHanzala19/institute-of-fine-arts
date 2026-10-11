@@ -1,0 +1,37 @@
+@model Staff
+@{
+    ViewData["Title"] = Model.FullName;
+    var admin = User.IsInRole(Roles.Admin);
+}
+<div class="page-head">
+    <div>
+        <a asp-action="Index" class="back-link"><i class="bi bi-arrow-left"></i>All staff</a>
+        <div class="d-flex align-items-center gap-3">@Html.Avatar(Model.FullName, "lg")<div><h1 class="page-title">@Model.FullName</h1><p class="page-sub">@(Model.Designation ?? "Instructor") @(Model.IsActive ? "" : "· inactive")</p></div></div>
+    </div>
+    @if (admin)
+    {
+        <div class="page-actions">
+            <a asp-action="Edit" asp-route-id="@Model.StaffId" class="btn btn-soft"><i class="bi bi-pencil me-1"></i>Edit</a>
+            <a asp-controller="Users" asp-action="ResetPassword" asp-route-id="@Model.ApplicationUserId" asp-route-returnUrl="@Context.Request.Path" class="btn btn-soft"><i class="bi bi-key me-1"></i>Reset password</a>
+            <form asp-action="ToggleActive" asp-route-id="@Model.StaffId" method="post" class="d-inline">
+                <button class="btn @(Model.IsActive ? "btn-danger-soft" : "btn-primary")" type="submit" data-confirm="@(Model.IsActive ? "The staff member will be signed out and unable to log in until reactivated." : "The staff member will be able to sign in again.")" data-confirm-title="@(Model.IsActive ? "Deactivate account?" : "Reactivate account?")">@(Model.IsActive ? "Deactivate" : "Reactivate")</button>
+            </form>
+        </div>
+    }
+</div>
+<div class="stat-grid">
+    <div class="stat"><span class="stat-icon brand"><i class="bi bi-clipboard-check"></i></span><div><div class="stat-value">@ViewBag.Evaluations</div><div class="stat-label">Evaluations written</div></div></div>
+    <div class="stat"><span class="stat-icon gold"><i class="bi bi-trophy"></i></span><div><div class="stat-value">@ViewBag.Competitions</div><div class="stat-label">Competitions created</div></div></div>
+    <div class="stat"><span class="stat-icon success"><i class="bi bi-award"></i></span><div><div class="stat-value">@ViewBag.Awards</div><div class="stat-label">Awards issued</div></div></div>
+</div>
+<div class="row g-4">
+    <div class="col-lg-6"><div class="panel"><div class="panel-head"><h3>Personal</h3></div><div class="panel-body"><dl class="kv mb-0">
+        <dt>Email</dt><dd>@Model.ApplicationUser.Email</dd><dt>Phone</dt><dd>@Model.PhoneNumber</dd><dt>Gender</dt><dd>@Model.Gender</dd>
+        <dt>Date of birth</dt><dd>@Ui.Date(Model.DateOfBirth)</dd><dt>Address</dt><dd>@Model.Address</dd><dt>Emergency contact</dt><dd>@(Model.EmergencyContact ?? "—")</dd>
+    </dl></div></div></div>
+    <div class="col-lg-6"><div class="panel"><div class="panel-head"><h3>Employment</h3></div><div class="panel-body"><dl class="kv mb-0">
+        <dt>Designation</dt><dd>@(Model.Designation ?? "—")</dd><dt>Qualification</dt><dd>@(Model.Qualification ?? "—")</dd><dt>Joined</dt><dd>@Ui.Date(Model.DateJoined)</dd>
+        <dt>Classes</dt><dd>@(Model.HandlesClass ?? "—")</dd><dt>Subjects</dt><dd>@(Model.HandlesSubject ?? "—")</dd><dt>Last sign-in</dt><dd>@Ui.DateTimeText(Model.ApplicationUser.LastLoginAt)</dd>
+        <dt>Remarks</dt><dd>@(Model.Remarks ?? "—")</dd>
+    </dl></div></div></div>
+</div>

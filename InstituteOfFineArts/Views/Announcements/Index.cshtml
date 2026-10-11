@@ -1,0 +1,39 @@
+@model List<Announcement>
+@{
+    ViewData["Title"] = "Announcements";
+}
+<div class="page-head">
+    <div><h1 class="page-title">Announcements</h1><p class="page-sub">Notices shown on dashboards (and on the home page when addressed to everyone).</p></div>
+    <div class="page-actions"><a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New announcement</a></div>
+</div>
+@if (Model.Count == 0)
+{
+    <div class="panel"><div class="panel-body"><partial name="_Empty" model='("bi-megaphone", "No announcements", "Post a notice to keep students and staff informed.")' /></div></div>
+}
+else
+{
+    <div class="d-grid gap-3">
+        @foreach (var a in Model)
+        {
+            var expired = a.ExpiresAt.HasValue && a.ExpiresAt < DateTime.Now;
+            <div class="panel @(expired ? "opacity-50" : "")">
+                <div class="panel-body d-flex flex-wrap justify-content-between gap-3">
+                    <div style="min-width:0;flex:1 1 380px">
+                        <div class="d-flex flex-wrap gap-2 mb-1">
+                            @if (a.IsPinned) { <span class="chip chip-brand"><i class="bi bi-pin-angle-fill"></i>Pinned</span> }
+                            <span class="chip chip-info">@a.Audience.DisplayName()</span>
+                            @if (expired) { <span class="chip chip-neutral">Expired</span> }
+                        </div>
+                        <h4 class="mb-1">@a.Title</h4>
+                        <p class="text-muted mb-1 pre">@a.Body</p>
+                        <div class="row-sub">@Ui.DateTimeText(a.PublishedAt) · @(a.CreatedBy?.FullName ?? "—")@(a.ExpiresAt.HasValue ? " · expires " + Ui.Date(a.ExpiresAt) : "")</div>
+                    </div>
+                    <div class="d-flex gap-2 align-items-start">
+                        <a asp-action="Edit" asp-route-id="@a.AnnouncementId" class="btn btn-sm btn-soft"><i class="bi bi-pencil me-1"></i>Edit</a>
+                        <form asp-action="Delete" asp-route-id="@a.AnnouncementId" method="post"><button class="btn btn-sm btn-danger-soft" type="submit" data-confirm="This announcement will be removed for everyone." data-confirm-title="Delete announcement?" data-confirm-ok="Delete"><i class="bi bi-trash"></i></button></form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

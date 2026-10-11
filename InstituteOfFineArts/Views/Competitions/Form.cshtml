@@ -1,0 +1,64 @@
+@model CompetitionFormVm
+@{
+    var isEdit = Model.CompetitionId > 0;
+    ViewData["Title"] = isEdit ? "Edit competition" : "New competition";
+    void TierRow(string idx, string rank, AwardTierVm? t)
+    {
+        <div class="tier-row">
+            <input type="hidden" name="Awards[@idx].CompetitionAwardId" value="@t?.CompetitionAwardId" />
+            <div><label class="form-label">Rank</label><input type="number" min="1" name="Awards[@idx].Rank" value="@rank" class="form-control" /></div>
+            <div><label class="form-label">Award title</label><input name="Awards[@idx].AwardTitle" value="@t?.AwardTitle" class="form-control" placeholder="e.g. First Prize" maxlength="100" /></div>
+            <div><label class="form-label">Description</label><input name="Awards[@idx].AwardDescription" value="@t?.AwardDescription" class="form-control" placeholder="Medal, certificate…" maxlength="500" /></div>
+            <div><label class="form-label">Prize money (@Ui.Currency)</label><input type="number" min="0" step="0.01" name="Awards[@idx].PrizeMoney" value="@t?.PrizeMoney" class="form-control" /></div>
+            <div class="pt-4"><button type="button" class="btn btn-danger-soft btn-icon" data-remove-tier title="Remove tier"><i class="bi bi-trash"></i></button></div>
+        </div>
+    }
+}
+<div class="page-head">
+    <div>
+        <a asp-action="@(isEdit ? "Details" : "Index")" asp-route-id="@(isEdit ? Model.CompetitionId : null)" class="back-link"><i class="bi bi-arrow-left"></i>@(isEdit ? "Back to competition" : "All competitions")</a>
+        <h1 class="page-title">@ViewData["Title"]</h1>
+    </div>
+</div>
+
+<form method="post" novalidate>
+    <input type="hidden" asp-for="CompetitionId" />
+    <div asp-validation-summary="ModelOnly" class="alert alert-soft-danger"></div>
+
+    <div class="form-section">
+        <div class="section-head"><span class="ico"><i class="bi bi-card-text"></i></span><div><h3>The brief</h3><p>What students will see on the competition page.</p></div></div>
+        <div class="row g-3">
+            <div class="col-md-8"><label asp-for="Title" class="form-label"></label><input asp-for="Title" class="form-control" /><span asp-validation-for="Title"></span></div>
+            <div class="col-md-4"><label asp-for="Theme" class="form-label"></label><input asp-for="Theme" class="form-control" placeholder="e.g. Nature &amp; weather" /><span asp-validation-for="Theme"></span></div>
+            <div class="col-12"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="3" maxlength="2000"></textarea><span asp-validation-for="Description"></span></div>
+            <div class="col-12"><label asp-for="Conditions" class="form-label"></label><textarea asp-for="Conditions" class="form-control" rows="4" maxlength="3000" placeholder="One entry per student, original work only…"></textarea><span asp-validation-for="Conditions"></span></div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="section-head"><span class="ico"><i class="bi bi-calendar-event"></i></span><div><h3>Schedule</h3><p>Entries after the deadline are disqualified automatically.</p></div></div>
+        <div class="row g-3">
+            <div class="col-md-4"><label asp-for="StartDate" class="form-label"></label><input asp-for="StartDate" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" class="form-control" /><span asp-validation-for="StartDate"></span></div>
+            <div class="col-md-4"><label asp-for="EndDate" class="form-label"></label><input asp-for="EndDate" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" class="form-control" /><span asp-validation-for="EndDate"></span></div>
+            @if (isEdit)
+            {
+                <div class="col-md-4"><label asp-for="Status" class="form-label"></label><select asp-for="Status" asp-items="Ui.EnumItems(Model.Status)" class="form-select"></select><div class="form-text">Setting “Concluded” opens the awards phase.</div></div>
+            }
+        </div>
+    </div>
+
+    <div class="form-section" data-tiers>
+        <div class="section-head"><span class="ico"><i class="bi bi-award"></i></span><div><h3>Award tiers</h3><p>Prizes shown to students. Each tier can be won once.</p></div></div>
+        <span asp-validation-for="Awards" class="d-block mb-2"></span>
+        <div data-tier-list>
+            @for (var i = 0; i < Model.Awards.Count; i++) { TierRow(i.ToString(), Model.Awards[i].Rank.ToString(), Model.Awards[i]); }
+        </div>
+        <template>@{ TierRow("__i__", "__rank__", null); }</template>
+        <button type="button" class="btn btn-soft btn-sm mt-2" data-add-tier><i class="bi bi-plus-lg me-1"></i>Add a tier</button>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-lg">@(isEdit ? "Save changes" : "Create competition")</button>
+        <a asp-action="@(isEdit ? "Details" : "Index")" asp-route-id="@(isEdit ? Model.CompetitionId : null)" class="btn btn-soft btn-lg">Cancel</a>
+    </div>
+</form>

@@ -1,0 +1,52 @@
+@model PagedList<CompetitionRow>
+@{
+    ViewData["Title"] = "Competitions";
+    var canEdit = User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Staff);
+    var status = (CompetitionStatus?)ViewBag.Status;
+}
+<div class="page-head">
+    <div><h1 class="page-title">Competitions</h1><p class="page-sub">Themed contests, their deadlines and prize tiers.</p></div>
+    <div class="page-actions">
+        <a asp-action="Index" asp-route-export="true" asp-route-q="@ViewBag.Q" asp-route-status="@status" class="btn btn-soft"><i class="bi bi-download me-1"></i>Export CSV</a>
+        @if (canEdit) { <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New competition</a> }
+    </div>
+</div>
+
+<form method="get" class="filters">
+    <div class="search"><i class="bi bi-search"></i><input type="search" name="q" value="@ViewBag.Q" class="form-control" placeholder="Search title or theme…" data-debounce /></div>
+    <select name="status" class="form-select" data-autosubmit asp-items="Ui.EnumItems(status)"><option value="">All statuses</option></select>
+    @if (!string.IsNullOrEmpty((string?)ViewBag.Q) || status.HasValue) { <a asp-action="Index" class="btn btn-ghost btn-sm">Clear</a> }
+</form>
+
+@if (Model.Count == 0)
+{
+    <div class="panel"><div class="panel-body"><partial name="_Empty" model='("bi-trophy", "No competitions found", "Create the first one to open the season.")' /></div></div>
+}
+else
+{
+    <div class="grid-cards wide">
+        @foreach (var r in Model)
+        {
+            var c = r.Competition;
+            <div class="comp-card">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div class="theme">@(c.Theme ?? "Competition")</div>
+                    @Html.Chip(c.Status)
+                </div>
+                <h3><a asp-action="Details" asp-route-id="@c.CompetitionId" class="text-reset stretched-link">@c.Title</a></h3>
+                <p class="text-muted small mb-0" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">@c.Description</p>
+                <dl class="facts mb-0">
+                    <div><dt>Opens</dt><dd>@Ui.Date(c.StartDate)</dd></div>
+                    <div><dt>Deadline</dt><dd>@Ui.Date(c.EndDate)</dd></div>
+                    <div><dt>Entries</dt><dd>@r.Submissions</dd></div>
+                    <div><dt>Prize pool</dt><dd>@Ui.Money(r.PrizePool)</dd></div>
+                </dl>
+                @if (c.Status != CompetitionStatus.Concluded && c.DeadlinePassed)
+                {
+                    <span class="chip chip-warning align-self-start"><i class="bi bi-exclamation-triangle"></i>Past deadline — ready to conclude</span>
+                }
+            </div>
+        }
+    </div>
+    <partial name="_Pager" model="(IPaged)Model" />
+}

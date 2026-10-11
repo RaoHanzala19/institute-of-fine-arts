@@ -1,0 +1,32 @@
+@model List<Submission>
+@{
+    ViewData["Title"] = "Grades & feedback";
+}
+<div class="page-head"><div><h1 class="page-title">Grades &amp; feedback</h1><p class="page-sub">Read what your evaluators wrote and use it on the next canvas.</p></div></div>
+@if (Model.Count == 0)
+{
+    <div class="panel"><div class="panel-body"><partial name="_Empty" model='("bi-chat-square-heart", "No feedback yet", "Once an instructor evaluates one of your paintings, their notes appear here.")' /></div></div>
+}
+else
+{
+    <div class="d-grid gap-4">
+    @foreach (var s in Model)
+    {
+        var e = s.Evaluation!;
+        <div class="panel">
+            <div class="panel-head">
+                <div class="d-flex align-items-center gap-3"><img class="thumb-sm" src="@(s.ThumbnailPath ?? s.ImageFilePath)" alt="" /><div><a asp-action="SubmissionDetails" asp-route-id="@s.SubmissionId" class="row-title fs-5 display-font">@s.PaintingTitle</a><div class="row-sub">@s.Competition.Title · evaluated @Ui.Date(e.EvaluatedAt) by @(e.EvaluatedBy?.FullName ?? "your instructor")</div></div></div>
+                @Html.Chip(e.Grade)
+            </div>
+            <div class="panel-body">
+                <div class="feedback-grid">
+                    @if (!string.IsNullOrWhiteSpace(e.PositivePoints)) { <div class="feedback pos"><h6>Positive points</h6><p>@e.PositivePoints</p></div> }
+                    @if (!string.IsNullOrWhiteSpace(e.NegativePoints)) { <div class="feedback neg"><h6>Negative points</h6><p>@e.NegativePoints</p></div> }
+                    @if (!string.IsNullOrWhiteSpace(e.AreasOfImprovement)) { <div class="feedback imp"><h6>Areas of improvement</h6><p>@e.AreasOfImprovement</p></div> }
+                    @if (!string.IsNullOrWhiteSpace(e.GeneralRemarks)) { <div class="feedback gen"><h6>General remarks</h6><p>@e.GeneralRemarks</p></div> }
+                </div>
+            </div>
+        </div>
+    }
+    </div>
+}

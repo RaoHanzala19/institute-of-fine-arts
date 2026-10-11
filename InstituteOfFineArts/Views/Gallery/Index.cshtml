@@ -1,0 +1,47 @@
+@model PagedList<Submission>
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Gallery";
+    var authed = User.Identity?.IsAuthenticated == true;
+    var liked = (HashSet<int>)ViewBag.Liked;
+    string Artist(Student s) => authed ? s.FullName : $"{s.FirstName} {s.LastName[..1]}.";
+}
+<section class="hero" style="padding-bottom:1.5rem">
+    <div class="container">
+        <span class="eyebrow">The gallery</span>
+        <h1 style="max-width:16ch">Paintings graded <em>Best</em>.</h1>
+        <p class="lead">The strongest work from every competition, as chosen by our instructors. Sign in to like the pieces you love.</p>
+    </div>
+</section>
+<section class="section pt-3">
+    <div class="container">
+        <form method="get" class="filters">
+            <div class="search"><i class="bi bi-search"></i><input type="search" name="q" value="@ViewBag.Q" class="form-control" placeholder="Search title, artist or competition…" data-debounce /></div>
+            <select name="competitionId" class="form-select" data-autosubmit asp-items="ViewBag.Competitions"><option value="">All competitions</option></select>
+            <select name="sort" class="form-select" data-autosubmit>
+                <option value="new" selected="@((string)ViewBag.Sort == "new")">Newest first</option>
+                <option value="liked" selected="@((string)ViewBag.Sort == "liked")">Most liked</option>
+                <option value="title" selected="@((string)ViewBag.Sort == "title")">Title A–Z</option>
+            </select>
+            @if (!string.IsNullOrEmpty((string?)ViewBag.Q) || ViewBag.CompetitionId != null)
+            {
+                <a asp-action="Index" class="btn btn-ghost btn-sm">Clear</a>
+            }
+        </form>
+
+        @if (Model.Count == 0)
+        {
+            <div class="panel"><div class="panel-body"><partial name="_Empty" model='("bi-palette2", "No paintings match", "Try a different search or clear the filters.")' /></div></div>
+        }
+        else
+        {
+            <div class="grid-cards">
+                @foreach (var p in Model)
+                {
+                    <partial name="_PaintingCard" model='new PaintingCardVm { S = p, Href = Url.Action("Details", new { id = p.SubmissionId })!, Artist = Artist(p.Student), Likes = p.Likes.Count, Liked = liked.Contains(p.SubmissionId), Anonymous = !authed }' />
+                }
+            </div>
+            <partial name="_Pager" model="(IPaged)Model" />
+        }
+    </div>
+</section>

@@ -1,0 +1,66 @@
+@model StudentCompetitionVm
+@{
+    var c = Model.Competition;
+    ViewData["Title"] = c.Title;
+    var winners = (List<Award>)ViewBag.Winners;
+    var mine = Model.Mine;
+}
+<div class="page-head">
+    <div>
+        <a asp-action="Competitions" class="back-link"><i class="bi bi-arrow-left"></i>All competitions</a>
+        <div class="d-flex flex-wrap gap-2 mb-2">@Html.Chip(c.Status)@if (c.Theme != null) { <span class="chip chip-brand">@c.Theme</span> }</div>
+        <h1 class="page-title">@c.Title</h1>
+        <p class="page-sub">Opens @Ui.Date(c.StartDate) · deadline @Ui.DateTimeText(c.EndDate)</p>
+    </div>
+    <div class="page-actions">
+        @if (mine != null) { <a asp-action="SubmissionDetails" asp-route-id="@mine.SubmissionId" class="btn btn-soft"><i class="bi bi-image me-1"></i>View my entry</a> }
+        else if (c.AcceptsSubmissions) { <a asp-action="Upload" asp-route-competitionId="@c.CompetitionId" class="btn btn-primary btn-lg"><i class="bi bi-cloud-arrow-up me-1"></i>Enter this competition</a> }
+    </div>
+</div>
+
+@if (mine == null && c.AcceptsSubmissions && c.DeadlinePassed)
+{
+    <div class="alert alert-soft-danger"><i class="bi bi-clock-history me-2"></i><strong>The deadline has passed.</strong> You can still upload, but the entry will be automatically disqualified.</div>
+}
+else if (mine == null && c.StartDate > DateTime.Now)
+{
+    <div class="alert alert-soft-info"><i class="bi bi-calendar-event me-2"></i>This competition opens on @Ui.DateTimeText(c.StartDate).</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-8 d-grid gap-4 align-content-start">
+        <div class="panel"><div class="panel-body">
+            <h4>The brief</h4><p class="text-muted pre">@(c.Description ?? "—")</p>
+            @if (!string.IsNullOrWhiteSpace(c.Conditions)) { <h5 class="mt-4">Rules &amp; conditions</h5><p class="text-muted pre mb-0">@c.Conditions</p> }
+        </div></div>
+        @if (winners.Count > 0)
+        {
+            <div class="panel"><div class="panel-head"><h3>Winners</h3></div><div class="panel-body d-grid gap-3">
+                @foreach (var a in winners)
+                {
+                    <div class="winner-card">
+                        <img src="@(a.WinningSubmission.ThumbnailPath ?? a.WinningSubmission.ImageFilePath)" alt="" />
+                        <div><span class="chip chip-gold mb-1"><i class="bi bi-award-fill"></i>@a.DisplayTitle</span><div class="fw-semibold">@a.Student.FullName</div><div class="row-sub">“@a.WinningSubmission.PaintingTitle”</div></div>
+                    </div>
+                }
+            </div></div>
+        }
+    </div>
+    <div class="col-lg-4 d-grid gap-4 align-content-start">
+        <div class="panel"><div class="panel-head"><h3>Prizes</h3></div><div class="panel-body">
+            @foreach (var t in c.CompetitionAwards.OrderBy(a => a.Rank))
+            {
+                <div class="prize-row"><span class="rank-badge r@(t.Rank)">@t.Rank</span><div class="flex-grow-1"><strong>@t.AwardTitle</strong><div class="row-sub">@t.AwardDescription</div></div><strong>@Ui.Money(t.PrizeMoney)</strong></div>
+            }
+            @if (!c.CompetitionAwards.Any()) { <div class="text-muted small">No prizes announced.</div> }
+        </div></div>
+        <div class="panel"><div class="panel-body">
+            <h5>How to enter</h5>
+            <ol class="small text-muted ps-3 mb-0 d-grid gap-1">
+                <li>Photograph your painting as a JPEG (max 10 MB).</li>
+                <li>Add a poem, quotation, story or description.</li>
+                <li>Upload before the deadline — you can edit until then.</li>
+            </ol>
+        </div></div>
+    </div>
+</div>

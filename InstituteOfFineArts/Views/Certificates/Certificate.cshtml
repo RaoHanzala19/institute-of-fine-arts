@@ -1,0 +1,27 @@
+@model Award
+@{
+    ViewData["Title"] = "Certificate " + Model.CertificateNumber;
+    var inst = Inst.Value;
+}
+<div class="certificate">
+    <div class="border-outer"></div><div class="border-inner"></div>
+    <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+    <div class="inner">
+        <div class="org">@inst.Name</div>
+        <h1>Certificate of Achievement</h1>
+        <div class="sub">is proudly presented to</div>
+        <div class="name">@Model.Student.FullName</div>
+        <div class="body">
+            for winning <span class="title-award">@Model.DisplayTitle</span><br />
+            in the <strong>@Model.Competition.Title</strong> competition with the painting
+            <em>“@Model.WinningSubmission.PaintingTitle”</em>.
+            @if (!string.IsNullOrWhiteSpace(Model.Remarks)) { <div class="mt-2" style="font-size:.95rem;font-style:italic">@Model.Remarks</div> }
+        </div>
+        <div class="sigs">
+            <div class="sig"><div class="line">@(Model.IssuedBy?.FullName ?? "Head of Painting")</div>Awarded by</div>
+            <div class="seal"><i class="bi bi-award-fill"></i></div>
+            <div class="sig"><div class="line">@Model.DateIssued.ToString("dd MMMM yyyy")</div>Date of issue</div>
+        </div>
+    </div>
+    <div class="no">Certificate no. @Model.CertificateNumber</div>
+</div>

@@ -1,0 +1,27 @@
+@model ExhibitionListing
+@{
+    ViewData["Title"] = "Receipt " + Model.ReceiptNumber;
+    var inst = Inst.Value;
+}
+<div class="receipt">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <div style="letter-spacing:.3em;text-transform:uppercase;font-size:.75rem;color:#8a6414;font-weight:700">@inst.Name</div>
+            <h1 class="mb-0">Sale receipt</h1>
+            <div class="text-muted small">@inst.Address · @inst.Phone</div>
+        </div>
+        <div class="text-end"><div class="mono fw-bold">@Model.ReceiptNumber</div><div class="small text-muted">@Ui.Date(Model.DateSold)</div></div>
+    </div>
+    <div class="row g-4 mb-4">
+        <div class="col-6"><div class="small text-muted text-uppercase" style="letter-spacing:.1em">Sold to</div><strong>@Model.BuyerName</strong><br />@Model.BuyerAddress<br />@Model.BuyerPhone<br />@Model.BuyerEmail</div>
+        <div class="col-6"><div class="small text-muted text-uppercase" style="letter-spacing:.1em">Exhibition</div><strong>@Model.Exhibition.ExhibitionName</strong><br />@Model.Exhibition.Venue, @Model.Exhibition.City</div>
+    </div>
+    <table>
+        <thead><tr><th class="text-start">Item</th><th class="text-end">Amount</th></tr></thead>
+        <tbody>
+            <tr><td><strong>“@Model.Submission.PaintingTitle”</strong><br /><span class="small text-muted">by @Model.Submission.Student.FullName</span></td><td class="text-end">@Ui.Money(Model.FinalSalePrice, true)</td></tr>
+            <tr class="total"><td>Total paid</td><td class="text-end">@Ui.Money(Model.FinalSalePrice, true)</td></tr>
+        </tbody>
+    </table>
+    <div class="small text-muted mt-4">Thank you for supporting young artists. This receipt confirms the purchase of the painting named above from the Institute of Fine Arts exhibition.</div>
+</div>

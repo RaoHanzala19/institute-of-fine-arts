@@ -1,0 +1,44 @@
+@model SalesReportVm
+@{
+    ViewData["Title"] = "Sales report";
+}
+<div class="page-head">
+    <div><a asp-action="Index" class="back-link"><i class="bi bi-arrow-left"></i>Reports</a><h1 class="page-title">Sales &amp; payouts</h1><p class="page-sub">@Model.Rows.Count sold painting(s).</p></div>
+    <div class="page-actions">
+        <a asp-action="Sales" asp-route-export="true" asp-route-exhibitionId="@Model.ExhibitionId" class="btn btn-soft"><i class="bi bi-download me-1"></i>CSV</a>
+        <button class="btn btn-primary" type="button" data-print><i class="bi bi-printer me-1"></i>Print</button>
+    </div>
+</div>
+<form method="get" class="filters">
+    <select name="exhibitionId" class="form-select" data-autosubmit>
+        <option value="">All exhibitions</option>
+        @foreach (var e in Model.Exhibitions) { <option value="@e.ExhibitionId" selected="@(Model.ExhibitionId == e.ExhibitionId)">@e.ExhibitionName</option> }
+    </select>
+    @if (Model.ExhibitionId.HasValue) { <a asp-action="Sales" class="btn btn-ghost btn-sm">Clear</a> }
+</form>
+<div class="stat-grid">
+    <div class="stat"><span class="stat-icon success"><i class="bi bi-cash-coin"></i></span><div><div class="stat-value sm">@Ui.Money(Model.Gross)</div><div class="stat-label">Gross sales</div></div></div>
+    <div class="stat"><span class="stat-icon brand"><i class="bi bi-percent"></i></span><div><div class="stat-value sm">@Ui.Money(Model.Commission)</div><div class="stat-label">Institute commission</div></div></div>
+    <div class="stat"><span class="stat-icon indigo"><i class="bi bi-person-check"></i></span><div><div class="stat-value sm">@Ui.Money(Model.NetToStudents)</div><div class="stat-label">Owed to students</div></div></div>
+    <div class="stat"><span class="stat-icon gold"><i class="bi bi-check2-circle"></i></span><div><div class="stat-value sm">@Ui.Money(Model.Paid)</div><div class="stat-label">Already paid out</div></div></div>
+    <div class="stat"><span class="stat-icon warning"><i class="bi bi-hourglass-split"></i></span><div><div class="stat-value sm">@Ui.Money(Model.Outstanding)</div><div class="stat-label">Outstanding</div></div></div>
+</div>
+<div class="panel panel-flush"><div class="table-responsive"><table class="table-x">
+    <thead><tr><th>Receipt</th><th>Painting</th><th>Exhibition</th><th>Buyer</th><th class="num">Price</th><th class="num">Commission</th><th class="num">Net</th><th class="num">Paid</th><th>Payout</th></tr></thead>
+    <tbody>
+    @if (Model.Rows.Count == 0) { <tr><td colspan="9"><partial name="_Empty" model='("bi-bag", "No sales yet", "Sold paintings will be listed here.")' /></td></tr> }
+    @foreach (var l in Model.Rows)
+    {
+        <tr>
+            <td class="mono"><a asp-controller="Listings" asp-action="Receipt" asp-route-id="@l.ExhibitionListingId">@l.ReceiptNumber</a></td>
+            <td><a asp-controller="Listings" asp-action="Sale" asp-route-id="@l.ExhibitionListingId" class="row-title">@l.Submission.PaintingTitle</a><div class="row-sub">@l.Submission.Student.FullName</div></td>
+            <td>@l.Exhibition.ExhibitionName<div class="row-sub">@Ui.Date(l.DateSold)</div></td>
+            <td>@l.BuyerName</td>
+            <td class="num">@Ui.Money(l.FinalSalePrice)</td>
+            <td class="num">@Ui.Money(l.CommissionAmount)</td>
+            <td class="num">@Ui.Money(l.NetPayableToStudent)</td>
+            <td class="num">@Ui.Money(l.AmountPaidToStudent)</td>
+            <td>@Html.Chip(l.PaymentStatus)</td>
+        </tr>
+    }
+    </tbody></table></div></div>

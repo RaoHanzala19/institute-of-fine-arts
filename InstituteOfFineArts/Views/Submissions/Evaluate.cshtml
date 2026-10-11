@@ -1,0 +1,55 @@
+@model EvaluateVm
+@{
+    var s = (Submission)ViewBag.Submission;
+    ViewData["Title"] = "Evaluate";
+    var late = s.IsLateSubmission;
+    var options = new[] { (SubmissionGrade.Best, "Outstanding — award and exhibition material", "chip-gold"), (SubmissionGrade.Better, "Highly accomplished", "chip-success"), (SubmissionGrade.Good, "Solid with clear strengths", "chip-info"), (SubmissionGrade.Moderate, "Reasonable, with gaps", "chip-warning"), (SubmissionGrade.Normal, "Meets the brief, needs development", "chip-neutral"), (SubmissionGrade.Disqualified, "Breaks the rules", "chip-danger") };
+}
+<div class="page-head">
+    <div><a asp-action="Details" asp-route-id="@s.SubmissionId" class="back-link"><i class="bi bi-arrow-left"></i>Back to painting</a><h1 class="page-title">Evaluate “@s.PaintingTitle”</h1><p class="page-sub">@s.Student.FullName · @s.Competition.Title</p></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5"><div class="d-grid gap-3" style="position:sticky;top:90px">
+        <div class="frame"><a href="@s.ImageFilePath" target="_blank" rel="noopener"><img src="@s.ImageFilePath" alt="@s.PaintingTitle" /></a></div>
+        <div class="panel"><div class="panel-body"><div class="small text-muted mb-1">@s.TextType</div><div class="quote-block @(s.TextType == "Poem" ? "poem" : "") pre" style="font-size:.95rem">@s.AccompanyingText</div></div></div>
+    </div></div>
+    <div class="col-lg-7">
+        <form asp-action="Evaluate" asp-route-id="@s.SubmissionId" method="post" novalidate>
+            <input type="hidden" asp-for="SubmissionId" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-soft-danger"></div>
+            @if (late) { <div class="alert alert-soft-danger"><i class="bi bi-clock-history me-2"></i>Submitted after the deadline — this entry can only be disqualified.</div> }
+
+            <div class="form-section">
+                <div class="section-head"><span class="ico"><i class="bi bi-star"></i></span><div><h3>Grade</h3><p>Grades are visible to the student and decide eligibility for awards.</p></div></div>
+                <div class="row g-2">
+                    @foreach (var (g, help, cls) in options)
+                    {
+                        var disabled = late && g != SubmissionGrade.Disqualified;
+                        <div class="col-md-6">
+                            <input type="radio" class="btn-check" name="Grade" id="g-@g" value="@g" checked="@(Model.Grade == g)" disabled="@disabled" />
+                            <label for="g-@g" class="btn btn-soft w-100 text-start d-flex flex-column gap-1 py-2" style="border-radius:14px">
+                                <span class="chip @cls align-self-start">@g.DisplayName()</span><span class="small text-muted fw-normal">@help</span>
+                            </label>
+                        </div>
+                    }
+                </div>
+                <span asp-validation-for="Grade" class="d-block mt-2"></span>
+            </div>
+
+            <div class="form-section">
+                <div class="section-head"><span class="ico"><i class="bi bi-chat-square-text"></i></span><div><h3>Written feedback</h3><p>Specific, kind and useful — this is what helps the student grow.</p></div></div>
+                <div class="row g-3">
+                    <div class="col-md-6"><label asp-for="PositivePoints" class="form-label"></label><textarea asp-for="PositivePoints" class="form-control" rows="4" maxlength="2000"></textarea></div>
+                    <div class="col-md-6"><label asp-for="NegativePoints" class="form-label"></label><textarea asp-for="NegativePoints" class="form-control" rows="4" maxlength="2000"></textarea></div>
+                    <div class="col-md-6"><label asp-for="AreasOfImprovement" class="form-label"></label><textarea asp-for="AreasOfImprovement" class="form-control" rows="4" maxlength="2000"></textarea></div>
+                    <div class="col-md-6"><label asp-for="GeneralRemarks" class="form-label"></label><textarea asp-for="GeneralRemarks" class="form-control" rows="4" maxlength="2000"></textarea><span asp-validation-for="GeneralRemarks"></span></div>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary btn-lg" type="submit">Save evaluation</button>
+                <a asp-action="Details" asp-route-id="@s.SubmissionId" class="btn btn-soft btn-lg">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

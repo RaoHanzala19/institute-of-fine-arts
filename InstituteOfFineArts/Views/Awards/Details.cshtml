@@ -1,0 +1,36 @@
+@model Award
+@{
+    ViewData["Title"] = Model.DisplayTitle;
+    var canEdit = User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Staff);
+}
+<div class="page-head">
+    <div>
+        <a asp-action="Index" class="back-link"><i class="bi bi-arrow-left"></i>All awards</a>
+        <span class="chip chip-gold mb-2"><i class="bi bi-award-fill"></i>@Model.DisplayTitle</span>
+        <h1 class="page-title">@Model.Student.FullName</h1>
+        <p class="page-sub">@Model.Competition.Title · certificate <span class="mono">@Model.CertificateNumber</span></p>
+    </div>
+    <div class="page-actions">
+        <a asp-controller="Certificates" asp-action="Certificate" asp-route-id="@Model.AwardId" class="btn btn-primary"><i class="bi bi-printer me-1"></i>Certificate</a>
+        @if (canEdit)
+        {
+            <a asp-action="Edit" asp-route-id="@Model.AwardId" class="btn btn-soft"><i class="bi bi-pencil me-1"></i>Edit</a>
+            <form asp-action="Delete" asp-route-id="@Model.AwardId" method="post" class="d-inline"><button class="btn btn-danger-soft btn-icon" type="submit" data-confirm="The student will lose this award and its certificate." data-confirm-title="Revoke award?" data-confirm-ok="Revoke"><i class="bi bi-trash"></i></button></form>
+        }
+    </div>
+</div>
+<div class="row g-4">
+    <div class="col-lg-6"><div class="frame"><img src="@Model.WinningSubmission.ImageFilePath" alt="@Model.WinningSubmission.PaintingTitle" /></div></div>
+    <div class="col-lg-6"><div class="panel"><div class="panel-body">
+        <dl class="kv mb-0">
+            <dt>Winning painting</dt><dd><a asp-controller="Submissions" asp-action="Details" asp-route-id="@Model.SubmissionId">@Model.WinningSubmission.PaintingTitle</a></dd>
+            <dt>Student</dt><dd><a asp-controller="Students" asp-action="Details" asp-route-id="@Model.StudentId">@Model.Student.FullName</a></dd>
+            <dt>Competition</dt><dd><a asp-controller="Competitions" asp-action="Details" asp-route-id="@Model.CompetitionId">@Model.Competition.Title</a></dd>
+            <dt>Tier</dt><dd>@(Model.CompetitionAward?.AwardTitle ?? "Custom award")</dd>
+            <dt>Prize money</dt><dd>@Ui.Money(Model.CompetitionAward?.PrizeMoney)</dd>
+            <dt>Date issued</dt><dd>@Ui.Date(Model.DateIssued)</dd>
+            <dt>Issued by</dt><dd>@(Model.IssuedBy?.FullName ?? "—")</dd>
+            <dt>Remarks</dt><dd class="pre">@(string.IsNullOrWhiteSpace(Model.Remarks) ? "—" : Model.Remarks)</dd>
+        </dl>
+    </div></div></div>
+</div>

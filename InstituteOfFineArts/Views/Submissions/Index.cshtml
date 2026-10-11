@@ -1,0 +1,50 @@
+@model PagedList<Submission>
+@{
+    ViewData["Title"] = "Submissions";
+    var canEval = User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Staff);
+    var grade = (SubmissionGrade?)ViewBag.Grade;
+    var hasFilter = !string.IsNullOrEmpty((string?)ViewBag.Q) || grade.HasValue || (bool)ViewBag.Late || ViewBag.CompetitionId != null;
+}
+<div class="page-head">
+    <div><h1 class="page-title">Submissions</h1><p class="page-sub">Every painting entered into a competition.</p></div>
+    <div class="page-actions">
+        <a asp-action="Index" asp-route-export="true" asp-route-q="@ViewBag.Q" asp-route-grade="@grade" asp-route-competitionId="@ViewBag.CompetitionId" asp-route-late="@ViewBag.Late" class="btn btn-soft"><i class="bi bi-download me-1"></i>Export CSV</a>
+        @if (canEval) { <a asp-action="Next" class="btn btn-primary"><i class="bi bi-lightning-charge me-1"></i>Review next</a> }
+    </div>
+</div>
+
+<form method="get" class="filters">
+    <div class="search"><i class="bi bi-search"></i><input type="search" name="q" value="@ViewBag.Q" class="form-control" placeholder="Search painting, student or enrollment no…" data-debounce /></div>
+    <select name="competitionId" class="form-select" data-autosubmit asp-items="ViewBag.Competitions"><option value="">All competitions</option></select>
+    <select name="grade" class="form-select" data-autosubmit asp-items="Ui.EnumItems(grade)"><option value="">All grades</option></select>
+    <div class="form-check form-switch ms-1"><input class="form-check-input" type="checkbox" name="late" value="true" id="late" checked="@((bool)ViewBag.Late)" onchange="this.form.submit()" /><label for="late" class="form-check-label small">Late only</label></div>
+    @if (hasFilter) { <a asp-action="Index" class="btn btn-ghost btn-sm">Clear</a> }
+</form>
+
+@if (Model.Count == 0)
+{
+    <div class="panel"><div class="panel-body"><partial name="_Empty" model='("bi-images", "No submissions match", "Try clearing the filters.")' /></div></div>
+}
+else
+{
+    <div class="panel panel-flush"><div class="table-responsive"><table class="table-x">
+        <thead><tr><th></th><th>Painting</th><th>Student</th><th>Competition</th><th>Submitted</th><th>Grade</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var s in Model)
+        {
+            <tr>
+                <td style="width:1%"><img class="thumb-sm" src="@(s.ThumbnailPath ?? s.ImageFilePath)" alt="" loading="lazy" /></td>
+                <td><a asp-action="Details" asp-route-id="@s.SubmissionId" class="row-title">@s.PaintingTitle</a><div class="row-sub">@s.TextType</div></td>
+                <td>@s.Student.FullName<div class="row-sub">@s.Student.EnrollmentNumber</div></td>
+                <td>@s.Competition.Title</td>
+                <td class="row-sub">@Ui.DateTimeText(s.SubmittedAt)@if (s.IsLateSubmission) { <div><span class="chip chip-danger">Late</span></div> }</td>
+                <td>@Html.Chip(s.Grade)</td>
+                <td class="actions">
+                    @if (canEval && !s.IsLateSubmission) { <a asp-action="Evaluate" asp-route-id="@s.SubmissionId" class="btn btn-sm @(s.Grade == SubmissionGrade.Pending ? "btn-primary" : "btn-soft")">@(s.Grade == SubmissionGrade.Pending ? "Evaluate" : "Re-grade")</a> }
+                    else { <a asp-action="Details" asp-route-id="@s.SubmissionId" class="btn btn-sm btn-soft">View</a> }
+                </td>
+            </tr>
+        }
+        </tbody></table></div></div>
+    <partial name="_Pager" model="(IPaged)Model" />
+}

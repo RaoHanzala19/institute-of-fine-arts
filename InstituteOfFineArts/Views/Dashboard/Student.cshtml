@@ -1,0 +1,102 @@
+@model StudentDashboardVm
+@{
+    ViewData["Title"] = "Dashboard";
+    var s = Model.Student;
+}
+<div class="page-head">
+    <div><h1 class="page-title">Hello, @s.FirstName</h1><p class="page-sub">@s.Course · @s.EnrollmentNumber</p></div>
+    <div class="page-actions"><a asp-controller="Student" asp-action="Upload" class="btn btn-primary"><i class="bi bi-cloud-arrow-up me-1"></i>Upload a painting</a></div>
+</div>
+
+<div class="stat-grid">
+    <a asp-controller="Student" asp-action="Submissions" class="stat"><span class="stat-icon brand"><i class="bi bi-images"></i></span><div><div class="stat-value">@(Model.Evaluated + Model.Pending)</div><div class="stat-label">Paintings submitted</div></div></a>
+    <a asp-controller="Student" asp-action="Feedback" class="stat"><span class="stat-icon success"><i class="bi bi-check2-circle"></i></span><div><div class="stat-value">@Model.Evaluated</div><div class="stat-label">Evaluated · @Model.Pending waiting</div></div></a>
+    <a asp-controller="Student" asp-action="Awards" class="stat"><span class="stat-icon gold"><i class="bi bi-award"></i></span><div><div class="stat-value">@Model.Awards.Count</div><div class="stat-label">Awards won</div></div></a>
+    <a asp-controller="Student" asp-action="Exhibitions" class="stat"><span class="stat-icon indigo"><i class="bi bi-wallet2"></i></span><div><div class="stat-value sm">@Ui.Money(Model.Earned)</div><div class="stat-label">Earned from sales</div></div></a>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-3"><h3 class="mb-0">Open for your entry</h3><a asp-controller="Student" asp-action="Competitions" class="btn btn-sm btn-soft">All competitions</a></div>
+        @if (Model.Open.Count == 0)
+        {
+            <div class="panel"><div class="panel-body"><partial name="_Empty" model='("bi-emoji-smile", "You have entered everything that is open", "New competitions will show up here as soon as they are announced.")' /></div></div>
+        }
+        else
+        {
+            <div class="grid-cards wide">
+                @foreach (var c in Model.Open)
+                {
+                    <div class="comp-card">
+                        <div class="theme">@(c.Theme ?? "Competition")</div>
+                        <h3>@c.Title</h3>
+                        <dl class="facts mb-0">
+                            <div><dt>Deadline</dt><dd>@Ui.Date(c.EndDate)</dd></div>
+                            <div><dt>Prize pool</dt><dd>@Ui.Money(c.CompetitionAwards.Sum(a => a.PrizeMoney ?? 0))</dd></div>
+                        </dl>
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            @if (c.StartDate > DateTime.Now) { <span class="chip chip-info">Opens @Ui.Date(c.StartDate)</span> }
+                            else if (c.DeadlinePassed) { <span class="chip chip-danger">Deadline passed</span> }
+                            else { <span class="countdown @(c.DaysLeft <= 3 ? "urgent" : "")"><i class="bi bi-hourglass-split"></i>@c.DaysLeft day@(c.DaysLeft == 1 ? "" : "s") left</span> }
+                            <a asp-controller="Student" asp-action="Details" asp-route-id="@c.CompetitionId" class="btn btn-sm btn-primary">View</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+    <div class="col-lg-4 d-grid gap-4 align-content-start">
+        <partial name="_Announcements" model="Model.Announcements" />
+        <div class="panel"><div class="panel-head"><h3>My grades</h3></div><div class="panel-body"><div class="chart-box sm"><canvas data-chart="@Ui.ChartJson("doughnut", Model.GradeMix)"></canvas></div></div></div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="panel h-100">
+            <div class="panel-head"><h3>My recent submissions</h3><a asp-controller="Student" asp-action="Submissions" class="btn btn-sm btn-soft">All</a></div>
+            <div class="panel-flush">
+                @if (Model.Submissions.Count == 0) { <partial name="_Empty" model='("bi-brush", "No paintings yet", "Upload your first entry to see it here.")' /> }
+                else
+                {
+                    <div class="table-responsive"><table class="table-x"><tbody>
+                    @foreach (var sub in Model.Submissions)
+                    {
+                        <tr>
+                            <td style="width:1%"><img class="thumb-sm" src="@(sub.ThumbnailPath ?? sub.ImageFilePath)" alt="" /></td>
+                            <td><a asp-controller="Student" asp-action="SubmissionDetails" asp-route-id="@sub.SubmissionId" class="row-title">@sub.PaintingTitle</a><div class="row-sub">@sub.Competition.Title</div></td>
+                            <td>@Html.Chip(sub.Grade)</td>
+                        </tr>
+                    }
+                    </tbody></table></div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="panel h-100">
+            <div class="panel-head"><h3>Exhibitions &amp; sales</h3><a asp-controller="Student" asp-action="Exhibitions" class="btn btn-sm btn-soft">Details</a></div>
+            <div class="panel-body d-grid gap-3">
+                @if (Model.Listings.Count == 0) { <div class="text-muted small">None of your paintings has been forwarded to an exhibition yet. Paintings graded <strong>Best</strong> are eligible.</div> }
+                @foreach (var l in Model.Listings.Take(4))
+                {
+                    <div class="d-flex justify-content-between gap-2 align-items-center">
+                        <div><div class="row-title">@l.Submission.PaintingTitle</div><div class="row-sub">@l.Exhibition.ExhibitionName</div></div>
+                        <div class="text-end">@Html.Chip(l.SaleStatus)<div class="row-sub mt-1">@(l.SaleStatus == SaleStatus.Sold ? Ui.Money(l.FinalSalePrice) : "Asking " + Ui.Money(l.StudentQuotedPrice))</div></div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.Inspiration.Count > 0)
+{
+    <div class="d-flex justify-content-between align-items-center mb-3"><h3 class="mb-0">Inspiration — Best paintings</h3><a asp-controller="Gallery" asp-action="Index" class="btn btn-sm btn-soft">Open gallery</a></div>
+    <div class="grid-cards">
+        @foreach (var p in Model.Inspiration)
+        {
+            <partial name="_PaintingCard" model='new PaintingCardVm { S = p, Href = Url.Action("Details", "Gallery", new { id = p.SubmissionId })!, Artist = p.Student.FullName, ShowLike = false }' />
+        }
+    </div>
+}

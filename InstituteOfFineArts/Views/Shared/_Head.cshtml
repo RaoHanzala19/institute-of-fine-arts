@@ -1,0 +1,22 @@
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
+<meta name="theme-color" content="#c8442b" />
+<title>@(ViewData["Title"] is string t && t.Length > 0 ? t + " · " : "")@Inst.Value.Name</title>
+<script>
+    // apply the saved theme before first paint to avoid a flash
+    (function () {
+        try {
+            var t = localStorage.getItem('ifa-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-bs-theme', t);
+        } catch (e) { }
+    })();
+</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='11' fill='%23c8442b'/%3E%3Cpath d='M11 27c0-7 4-13 10-15 5-1.500 9 1 8 5-.8 3.500-4 3-5.500 4.500S22 25 19 27s-8 2-8 0z' fill='%23fff'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
+<link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" />
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />

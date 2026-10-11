@@ -1,0 +1,61 @@
+@model StudentFormVm
+@{
+    var isEdit = Model.StudentId > 0;
+    ViewData["Title"] = isEdit ? "Edit student" : "Enrol student";
+    var courses = new[] { "Diploma in Fine Arts", "Bachelor of Visual Arts", "Certificate in Oil Painting", "Diploma in Illustration" };
+}
+<div class="page-head">
+    <div><a asp-action="@(isEdit ? "Details" : "Index")" asp-route-id="@(isEdit ? Model.StudentId : null)" class="back-link"><i class="bi bi-arrow-left"></i>Back</a><h1 class="page-title">@ViewData["Title"]</h1></div>
+</div>
+<form method="post" novalidate>
+    <input type="hidden" asp-for="StudentId" />
+    <div asp-validation-summary="ModelOnly" class="alert alert-soft-danger"></div>
+
+    <div class="form-section">
+        <div class="section-head"><span class="ico"><i class="bi bi-person-badge"></i></span><div><h3>Account</h3><p>@(isEdit ? "The email is the student's login and cannot be changed here." : "The student signs in with this email and starting password.")</p></div></div>
+        <div class="row g-3">
+            <div class="col-md-6"><label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control" readonly="@isEdit" autocomplete="off" /><span asp-validation-for="Email"></span></div>
+            @if (!isEdit)
+            {
+                <div class="col-md-6"><label asp-for="Password" class="form-label">Starting password</label>
+                    <div class="input-group"><input asp-for="Password" type="password" class="form-control" autocomplete="new-password" /><button class="btn btn-soft" type="button" data-toggle-password="#Password" tabindex="-1"><i class="bi bi-eye"></i></button></div>
+                    <span asp-validation-for="Password"></span><div class="form-text">Min. 8 characters with upper, lower, digit and symbol.</div></div>
+            }
+            else
+            {
+                <div class="col-md-6 d-flex align-items-end"><div class="form-check form-switch"><input asp-for="IsActive" class="form-check-input" /><label asp-for="IsActive" class="form-check-label">Account is active</label></div></div>
+            }
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="section-head"><span class="ico"><i class="bi bi-person"></i></span><div><h3>Personal details</h3></div></div>
+        <div class="row g-3">
+            <div class="col-md-4"><label asp-for="FirstName" class="form-label"></label><input asp-for="FirstName" class="form-control" /><span asp-validation-for="FirstName"></span></div>
+            <div class="col-md-4"><label asp-for="LastName" class="form-label"></label><input asp-for="LastName" class="form-control" /><span asp-validation-for="LastName"></span></div>
+            <div class="col-md-4"><label asp-for="Gender" class="form-label"></label>
+                <select asp-for="Gender" class="form-select"><option value="">— select —</option><option>Female</option><option>Male</option><option>Other</option></select><span asp-validation-for="Gender"></span></div>
+            <div class="col-md-4"><label asp-for="DateOfBirth" class="form-label"></label><input asp-for="DateOfBirth" type="date" asp-format="{0:yyyy-MM-dd}" class="form-control" /><span asp-validation-for="DateOfBirth"></span></div>
+            <div class="col-md-4"><label asp-for="PhoneNumber" class="form-label"></label><input asp-for="PhoneNumber" class="form-control" /><span asp-validation-for="PhoneNumber"></span></div>
+            <div class="col-md-4"><label asp-for="Address" class="form-label"></label><input asp-for="Address" class="form-control" /><span asp-validation-for="Address"></span></div>
+            <div class="col-md-6"><label asp-for="ParentOrGuardianName" class="form-label"></label><input asp-for="ParentOrGuardianName" class="form-control" /></div>
+            <div class="col-md-6"><label asp-for="ParentOrGuardianPhone" class="form-label"></label><input asp-for="ParentOrGuardianPhone" class="form-control" /><span asp-validation-for="ParentOrGuardianPhone"></span></div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="section-head"><span class="ico"><i class="bi bi-mortarboard"></i></span><div><h3>Admission</h3></div></div>
+        <div class="row g-3">
+            <div class="col-md-4"><label asp-for="EnrollmentNumber" class="form-label"></label><input asp-for="EnrollmentNumber" class="form-control mono" /><span asp-validation-for="EnrollmentNumber"></span></div>
+            <div class="col-md-4"><label asp-for="AdmissionDate" class="form-label"></label><input asp-for="AdmissionDate" type="date" asp-format="{0:yyyy-MM-dd}" class="form-control" /><span asp-validation-for="AdmissionDate"></span></div>
+            <div class="col-md-4"><label asp-for="ClassName" class="form-label"></label><input asp-for="ClassName" class="form-control" placeholder="Batch 2026-A" /></div>
+            <div class="col-md-6"><label asp-for="Course" class="form-label"></label><input asp-for="Course" class="form-control" list="courseList" /><datalist id="courseList">@foreach (var c in courses) { <option value="@c"></option> }</datalist><span asp-validation-for="Course"></span></div>
+            <div class="col-md-6"><label asp-for="Remarks" class="form-label"></label><input asp-for="Remarks" class="form-control" /></div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary btn-lg" type="submit">@(isEdit ? "Save changes" : "Enrol student")</button>
+        <a asp-action="@(isEdit ? "Details" : "Index")" asp-route-id="@(isEdit ? Model.StudentId : null)" class="btn btn-soft btn-lg">Cancel</a>
+    </div>
+</form>

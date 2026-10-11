@@ -1,0 +1,77 @@
+@model StudentDetailsVm
+@{
+    var s = Model.Student;
+    ViewData["Title"] = s.FullName;
+    var admin = User.IsInRole(Roles.Admin);
+}
+<div class="page-head">
+    <div>
+        <a asp-action="Index" class="back-link"><i class="bi bi-arrow-left"></i>All students</a>
+        <div class="d-flex align-items-center gap-3">
+            @Html.Avatar(s.FullName, "lg")
+            <div><h1 class="page-title">@s.FullName</h1><p class="page-sub"><span class="mono">@s.EnrollmentNumber</span> · @s.Course @(s.IsActive ? "" : "· inactive")</p></div>
+        </div>
+    </div>
+    @if (admin)
+    {
+        <div class="page-actions">
+            <a asp-action="Edit" asp-route-id="@s.StudentId" class="btn btn-soft"><i class="bi bi-pencil me-1"></i>Edit</a>
+            <a asp-controller="Users" asp-action="ResetPassword" asp-route-id="@s.ApplicationUserId" asp-route-returnUrl="@Context.Request.Path" class="btn btn-soft"><i class="bi bi-key me-1"></i>Reset password</a>
+            <form asp-action="ToggleActive" asp-route-id="@s.StudentId" method="post" class="d-inline">
+                <button class="btn @(s.IsActive ? "btn-danger-soft" : "btn-primary")" type="submit" data-confirm="@(s.IsActive ? "The student will be signed out and unable to log in until reactivated." : "The student will be able to sign in again.")" data-confirm-title="@(s.IsActive ? "Deactivate account?" : "Reactivate account?")">@(s.IsActive ? "Deactivate" : "Reactivate")</button>
+            </form>
+        </div>
+    }
+</div>
+<div class="row g-4">
+    <div class="col-lg-4 d-grid gap-4 align-content-start">
+        <div class="panel"><div class="panel-head"><h3>Personal details</h3></div><div class="panel-body"><dl class="kv mb-0">
+            <dt>Email</dt><dd>@s.ApplicationUser.Email</dd>
+            <dt>Phone</dt><dd>@s.PhoneNumber</dd>
+            <dt>Gender</dt><dd>@s.Gender</dd>
+            <dt>Date of birth</dt><dd>@Ui.Date(s.DateOfBirth)</dd>
+            <dt>Address</dt><dd>@s.Address</dd>
+            <dt>Guardian</dt><dd>@(s.ParentOrGuardianName ?? "—")<div class="row-sub">@s.ParentOrGuardianPhone</div></dd>
+        </dl></div></div>
+        <div class="panel"><div class="panel-head"><h3>Admission</h3></div><div class="panel-body"><dl class="kv mb-0">
+            <dt>Enrollment</dt><dd class="mono">@s.EnrollmentNumber</dd>
+            <dt>Course</dt><dd>@s.Course</dd>
+            <dt>Class</dt><dd>@(s.ClassName ?? "—")</dd>
+            <dt>Admitted</dt><dd>@Ui.Date(s.AdmissionDate)</dd>
+            <dt>Last sign-in</dt><dd>@Ui.DateTimeText(s.ApplicationUser.LastLoginAt)</dd>
+            <dt>Remarks</dt><dd>@(s.Remarks ?? "—")</dd>
+        </dl></div></div>
+    </div>
+    <div class="col-lg-8 d-grid gap-4 align-content-start">
+        <div class="panel">
+            <div class="panel-head"><h3>Submissions <span class="text-muted fs-6">(@Model.Submissions.Count)</span></h3></div>
+            <div class="panel-flush">
+                @if (Model.Submissions.Count == 0) { <partial name="_Empty" model='("bi-brush", "No submissions", "This student has not entered a competition yet.")' /> }
+                else
+                {
+                    <div class="table-responsive"><table class="table-x"><tbody>
+                    @foreach (var sub in Model.Submissions)
+                    {
+                        <tr>
+                            <td style="width:1%"><img class="thumb-sm" src="@(sub.ThumbnailPath ?? sub.ImageFilePath)" alt="" /></td>
+                            <td><a asp-controller="Submissions" asp-action="Details" asp-route-id="@sub.SubmissionId" class="row-title">@sub.PaintingTitle</a><div class="row-sub">@sub.Competition.Title</div></td>
+                            <td class="row-sub">@Ui.Date(sub.SubmittedAt)</td>
+                            <td>@Html.Chip(sub.Grade)</td>
+                        </tr>
+                    }
+                    </tbody></table></div>
+                }
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6"><div class="panel h-100"><div class="panel-head"><h3>Awards</h3></div><div class="panel-body d-grid gap-2">
+                @if (Model.Awards.Count == 0) { <div class="text-muted small">No awards yet.</div> }
+                @foreach (var a in Model.Awards) { <a asp-controller="Awards" asp-action="Details" asp-route-id="@a.AwardId" class="d-flex justify-content-between text-body"><span><i class="bi bi-award-fill text-warning me-2"></i>@a.DisplayTitle</span><span class="row-sub">@a.Competition.Title</span></a> }
+            </div></div></div>
+            <div class="col-md-6"><div class="panel h-100"><div class="panel-head"><h3>Exhibitions</h3></div><div class="panel-body d-grid gap-2">
+                @if (Model.Listings.Count == 0) { <div class="text-muted small">Not exhibited yet.</div> }
+                @foreach (var l in Model.Listings) { <a asp-controller="Listings" asp-action="Sale" asp-route-id="@l.ExhibitionListingId" class="d-flex justify-content-between text-body"><span>@l.Submission.PaintingTitle<span class="row-sub d-block">@l.Exhibition.ExhibitionName</span></span>@Html.Chip(l.SaleStatus)</a> }
+            </div></div></div>
+        </div>
+    </div>
+</div>

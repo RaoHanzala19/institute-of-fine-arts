@@ -1,0 +1,65 @@
+@model AwardFormVm
+@{
+    var isEdit = Model.AwardId > 0;
+    ViewData["Title"] = isEdit ? "Edit award" : "Issue award";
+    var hasConcluded = (bool)ViewBag.HasConcluded;
+}
+<div class="page-head">
+    <div><a asp-action="Index" class="back-link"><i class="bi bi-arrow-left"></i>All awards</a><h1 class="page-title">@ViewData["Title"]</h1><p class="page-sub">Awards go to evaluated, non-disqualified paintings in a concluded competition.</p></div>
+</div>
+
+@if (!hasConcluded && !isEdit)
+{
+    <div class="panel"><div class="panel-body"><partial name="_Empty" model='("bi-flag", "No concluded competitions", "Conclude a competition first — awards can only be issued once the judging is over.")' /></div></div>
+}
+else
+{
+    <form asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@(isEdit ? Model.AwardId : null)" method="post" novalidate data-award-form data-award-id="@(isEdit ? Model.AwardId.ToString() : "")">
+        <input type="hidden" asp-for="AwardId" />
+        <div asp-validation-summary="ModelOnly" class="alert alert-soft-danger"></div>
+        <div class="form-section">
+            <div class="section-head"><span class="ico"><i class="bi bi-trophy"></i></span><div><h3>Winner</h3><p>Pick the competition, then the winning painting and prize tier.</p></div></div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="CompetitionId" class="form-label"></label>
+                    @if (isEdit)
+                    {
+                        <input type="hidden" asp-for="CompetitionId" />
+                        <select class="form-select" disabled asp-items="ViewBag.Competitions"></select>
+                    }
+                    else
+                    {
+                        <select asp-for="CompetitionId" asp-items="ViewBag.Competitions" class="form-select"><option value="">— choose a concluded competition —</option></select>
+                    }
+                    <span asp-validation-for="CompetitionId"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="SubmissionId" class="form-label"></label>
+                    @if (isEdit)
+                    {
+                        <input type="hidden" asp-for="SubmissionId" />
+                        <select class="form-select" name="SubmissionId_display" disabled data-selected="@Model.SubmissionId"><option>Winning painting is fixed once issued</option></select>
+                    }
+                    else
+                    {
+                        <select asp-for="SubmissionId" class="form-select" data-selected="@(Model.SubmissionId == 0 ? "" : Model.SubmissionId.ToString())"><option value="">— choose competition first —</option></select>
+                    }
+                    <span asp-validation-for="SubmissionId"></span>
+                    <div class="form-text text-warning" data-candidate-hint></div>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="CompetitionAwardId" class="form-label"></label>
+                    <select asp-for="CompetitionAwardId" class="form-select" data-selected="@Model.CompetitionAwardId"><option value="">— no tier (use custom title) —</option></select>
+                    <span asp-validation-for="CompetitionAwardId"></span>
+                </div>
+                <div class="col-md-6"><label asp-for="CustomAwardTitle" class="form-label"></label><input asp-for="CustomAwardTitle" class="form-control" placeholder="e.g. Jury's Special Mention" /><span asp-validation-for="CustomAwardTitle"></span></div>
+                <div class="col-md-4"><label asp-for="DateIssued" class="form-label"></label><input asp-for="DateIssued" type="date" asp-format="{0:yyyy-MM-dd}" class="form-control" /><span asp-validation-for="DateIssued"></span></div>
+                <div class="col-12"><label asp-for="Remarks" class="form-label"></label><textarea asp-for="Remarks" class="form-control" rows="3" maxlength="2000" placeholder="Shown on the certificate page and in the student's award list."></textarea></div>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-lg" type="submit">@(isEdit ? "Save changes" : "Issue award")</button>
+            <a asp-action="Index" class="btn btn-soft btn-lg">Cancel</a>
+        </div>
+    </form>
+}

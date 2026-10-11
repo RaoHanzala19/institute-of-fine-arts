@@ -1,0 +1,36 @@
+@model PagedList<ContactMessage>
+@{
+    ViewData["Title"] = "Contact inbox";
+    var filter = (string?)ViewBag.Filter;
+}
+<div class="page-head">
+    <div><h1 class="page-title">Contact inbox</h1><p class="page-sub">Messages sent through the public contact form.</p></div>
+    <div class="page-actions"><div class="nav-pills-x">
+        <a asp-action="Index" class="@(string.IsNullOrEmpty(filter) ? "active" : "")">All</a>
+        <a asp-action="Index" asp-route-filter="unread" class="@(filter == "unread" ? "active" : "")">Unread</a>
+        <a asp-action="Index" asp-route-filter="open" class="@(filter == "open" ? "active" : "")">Open</a>
+        <a asp-action="Index" asp-route-filter="resolved" class="@(filter == "resolved" ? "active" : "")">Resolved</a>
+    </div></div>
+</div>
+<div class="panel panel-flush">
+    @if (Model.Count == 0) { <partial name="_Empty" model='("bi-inbox", "Inbox is empty", "New messages from the website will show up here.")' /> }
+    else
+    {
+        <div class="table-responsive"><table class="table-x"><tbody>
+        @foreach (var m in Model)
+        {
+            <tr>
+                <td style="width:1%">@Html.Avatar(m.Name)</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@m.ContactMessageId" class="row-title">@(m.IsRead ? "" : "● ")@m.Subject</a>
+                    <div class="row-sub">@m.Name · @m.Email</div>
+                    <div class="row-sub text-truncate" style="max-width:520px">@m.Message</div>
+                </td>
+                <td class="row-sub">@Ui.TimeAgo(m.CreatedAt)</td>
+                <td>@if (m.IsResolved) { <span class="chip chip-success">Resolved</span> } else if (!m.IsRead) { <span class="chip chip-brand">New</span> } else { <span class="chip chip-neutral">Open</span> }</td>
+            </tr>
+        }
+        </tbody></table></div>
+    }
+</div>
+<partial name="_Pager" model="(IPaged)Model" />

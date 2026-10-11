@@ -1,0 +1,19 @@
+@{
+    var items = new List<(string Kind, string Icon, string Text)>();
+    if (TempData["Success"] is string s) { items.Add(("success", "bi-check-circle-fill", s)); }
+    if (TempData["Error"] is string e) { items.Add(("error", "bi-x-octagon-fill", e)); }
+    if (TempData["Warning"] is string w) { items.Add(("warning", "bi-exclamation-triangle-fill", w)); }
+}
+@if (items.Count > 0)
+{
+    <div class="toast-stack no-print" role="status" aria-live="polite">
+        @foreach (var it in items)
+        {
+            <div class="toast-x @it.Kind">
+                <i class="bi @it.Icon"></i>
+                <div class="small fw-semibold">@it.Text</div>
+                <button type="button" class="btn-close" aria-label="Close"></button>
+            </div>
+        }
+    </div>
+}

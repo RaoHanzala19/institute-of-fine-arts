@@ -1,0 +1,65 @@
+@model AdminDashboardVm
+@{
+    ViewData["Title"] = "Dashboard";
+    var name = User.FindFirst("full_name")?.Value ?? "";
+}
+<div class="page-head">
+    <div>
+        <h1 class="page-title">Good @(DateTime.Now.Hour < 12 ? "morning" : DateTime.Now.Hour < 18 ? "afternoon" : "evening"), @name.Split(' ')[0]</h1>
+        <p class="page-sub">Here is what is happening across the institute today.</p>
+    </div>
+    <div class="page-actions">
+        <a asp-controller="StaffMembers" asp-action="Create" class="btn btn-soft"><i class="bi bi-person-plus me-1"></i>Add staff</a>
+        <a asp-controller="Students" asp-action="Create" class="btn btn-primary"><i class="bi bi-mortarboard me-1"></i>Enrol student</a>
+    </div>
+</div>
+
+<div class="stat-grid">
+    <a asp-controller="Students" asp-action="Index" class="stat"><span class="stat-icon brand"><i class="bi bi-mortarboard"></i></span><div><div class="stat-value">@Model.Students</div><div class="stat-label">Active students</div></div></a>
+    <a asp-controller="StaffMembers" asp-action="Index" class="stat"><span class="stat-icon indigo"><i class="bi bi-person-workspace"></i></span><div><div class="stat-value">@Model.Staff</div><div class="stat-label">Active staff · @Model.Managers manager(s)</div></div></a>
+    <a asp-controller="Competitions" asp-action="Index" class="stat"><span class="stat-icon gold"><i class="bi bi-trophy"></i></span><div><div class="stat-value">@Model.ActiveCompetitions</div><div class="stat-label">Open competitions</div></div></a>
+    <a asp-controller="Submissions" asp-action="Index" class="stat"><span class="stat-icon success"><i class="bi bi-images"></i></span><div><div class="stat-value">@Model.Submissions</div><div class="stat-label">Paintings submitted</div></div></a>
+    <a asp-controller="Submissions" asp-action="Index" asp-route-grade="@SubmissionGrade.Pending" class="stat"><span class="stat-icon warning"><i class="bi bi-hourglass-split"></i></span><div><div class="stat-value">@Model.PendingReviews</div><div class="stat-label">Awaiting evaluation</div></div></a>
+    <a asp-controller="Messages" asp-action="Index" asp-route-filter="unread" class="stat"><span class="stat-icon info"><i class="bi bi-inbox"></i></span><div><div class="stat-value">@Model.UnreadMessages</div><div class="stat-label">Unread messages</div></div></a>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-7"><div class="panel h-100">
+        <div class="panel-head"><div><h3>Submissions per month</h3><div class="sub">Last six months</div></div></div>
+        <div class="panel-body"><div class="chart-box"><canvas data-chart="@Ui.ChartJson("bar", Model.SubmissionsPerMonth, "Submissions")"></canvas></div></div>
+    </div></div>
+    <div class="col-lg-5"><div class="panel h-100">
+        <div class="panel-head"><div><h3>Grade distribution</h3><div class="sub">All evaluated work</div></div></div>
+        <div class="panel-body"><div class="chart-box"><canvas data-chart="@Ui.ChartJson("doughnut", Model.GradeMix)"></canvas></div></div>
+    </div></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="panel h-100">
+            <div class="panel-head"><h3>Recent activity</h3><a asp-controller="Audit" asp-action="Index" class="btn btn-sm btn-soft">Full audit log</a></div>
+            <div class="panel-flush">
+                @if (Model.Recent.Count == 0) { <partial name="_Empty" model='("bi-journal-text", "No activity yet", "Changes made in the portal are recorded here.")' /> }
+                else
+                {
+                    <table class="table-x">
+                        <tbody>
+                        @foreach (var a in Model.Recent)
+                        {
+                            <tr>
+                                <td style="width:1%"><span class="chip @(a.Action == "Deleted" ? "chip-danger" : a.Action == "Created" ? "chip-success" : "chip-info")">@a.Action</span></td>
+                                <td><strong>@a.EntityName</strong> <span class="row-sub">@a.Details</span></td>
+                                <td class="text-end row-sub">@a.UserName<br />@Ui.TimeAgo(a.Timestamp)</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5 d-grid gap-4 align-content-start">
+        <div class="panel"><div class="panel-head"><h3>Accounts by role</h3></div><div class="panel-body"><div class="chart-box sm"><canvas data-chart="@Ui.ChartJson("bar", Model.UsersByRole, "Accounts")"></canvas></div></div></div>
+        <partial name="_Announcements" model="Model.Announcements" />
+    </div>
+</div>
